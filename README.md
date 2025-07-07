@@ -1,12 +1,12 @@
-# SAMS - Student Attendance Management System
+# SAMS - Server Alert Management System
 
-A comprehensive student attendance management system built with React Native for mobile and Rust for the backend.
+A comprehensive server monitoring and alert management system with React Native mobile application and Rust backend.
 
 ## Project Structure
 
 ```
 SAMS/
-├── sams-mobile/          # React Native mobile application
+├── sams-mobile/          # React Native mobile application for server monitoring
 ├── backend/              # Rust backend server
 ├── mobile-app/           # Additional mobile app components
 └── README.md
@@ -14,10 +14,20 @@ SAMS/
 
 ## Features
 
-- Mobile-first attendance tracking
-- Student and teacher management
-- Real-time attendance monitoring
-- Cross-platform mobile support (iOS & Android)
+### Mobile App (sams-mobile/)
+- 🔐 **4-Digit PIN Authentication** with account lockout protection
+- 📊 **Real-time Dashboard** with server status overview
+- 🖥️ **Server Management** - Add, edit, and monitor servers
+- 💓 **Infrastructure Health** - System metrics and performance monitoring
+- ⚡ **Command Execution** - Remote server command execution
+- 📈 **Reports & Queries** - Custom reports and stored queries
+- 🚨 **Alerts & Notifications** - Real-time alert management
+- 🔄 **Background Monitoring** - Continuous server health checks
+
+### Backend
+- Rust-based server infrastructure
+- API endpoints for mobile app
+- Real-time data processing
 
 ## Getting Started
 
@@ -41,13 +51,18 @@ SAMS/
    npm install
    ```
 
-3. Run the app:
+3. **Start the development server**
    ```bash
-   # For Android
-   npx react-native run-android
-   
-   # For iOS
-   npx react-native run-ios
+   npm start
+   ```
+
+4. **Run on device/emulator**
+   ```bash
+   # Android
+   npm run android
+
+   # iOS
+   npm run ios
    ```
 
 ### Backend Setup
@@ -63,6 +78,29 @@ SAMS/
    cargo run
    ```
 
+## Default Login
+- **PIN**: `1234`
+
+## Mobile App Structure (sams-mobile/)
+```
+sams-mobile/
+├── components/          # Reusable UI components
+├── screens/            # App screens
+├── navigation/         # Navigation setup
+├── context/           # Authentication context
+├── utils/             # Utility functions
+├── services/          # API services
+└── assets/            # Images, icons, fonts
+```
+
+## Technology Stack
+- React Native 0.73.6
+- React Navigation 6
+- React Native Paper
+- AsyncStorage
+- React Context
+- Rust (Backend)
+
 ## Contributing
 
 1. Fork the repository
@@ -73,4 +111,4 @@ SAMS/
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT License
