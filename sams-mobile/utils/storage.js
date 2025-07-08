@@ -186,4 +186,111 @@ export const addReport = async (report) => {
   const reports = await getReports();
   reports.unshift(report);
   return await storeReports(reports);
-}; 
+};
+
+// Initialize sample data for demo purposes
+export const initializeSampleData = async () => {
+  try {
+    // Check if data already exists
+    const existingServers = await getServerList();
+    const existingAlerts = await getAlerts();
+
+    // Only initialize if no data exists
+    if (existingServers.length === 0) {
+      const sampleServers = [
+        {
+          id: '1',
+          name: 'Web Server 01',
+          host: '192.168.1.10',
+          port: 80,
+          type: 'web',
+          status: 'online',
+          lastCheck: new Date().toISOString(),
+          uptime: '99.9%',
+          responseTime: '45ms',
+        },
+        {
+          id: '2',
+          name: 'Database Server',
+          host: '192.168.1.20',
+          port: 3306,
+          type: 'database',
+          status: 'online',
+          lastCheck: new Date().toISOString(),
+          uptime: '99.8%',
+          responseTime: '12ms',
+        },
+        {
+          id: '3',
+          name: 'API Gateway',
+          host: '192.168.1.30',
+          port: 8080,
+          type: 'api',
+          status: 'warning',
+          lastCheck: new Date().toISOString(),
+          uptime: '98.5%',
+          responseTime: '120ms',
+        },
+        {
+          id: '4',
+          name: 'File Server',
+          host: '192.168.1.40',
+          port: 21,
+          type: 'file',
+          status: 'offline',
+          lastCheck: new Date(Date.now() - 300000).toISOString(), // 5 minutes ago
+          uptime: '95.2%',
+          responseTime: 'N/A',
+        },
+      ];
+      await storeServerList(sampleServers);
+    }
+
+    if (existingAlerts.length === 0) {
+      const sampleAlerts = [
+        {
+          id: '1',
+          title: 'High CPU Usage',
+          message: 'Web Server 01 CPU usage is at 85%',
+          severity: 'warning',
+          timestamp: new Date(Date.now() - 600000).toISOString(), // 10 minutes ago
+          read: false,
+          serverId: '1',
+        },
+        {
+          id: '2',
+          title: 'Server Offline',
+          message: 'File Server is not responding',
+          severity: 'critical',
+          timestamp: new Date(Date.now() - 300000).toISOString(), // 5 minutes ago
+          read: false,
+          serverId: '4',
+        },
+        {
+          id: '3',
+          title: 'Slow Response Time',
+          message: 'API Gateway response time exceeded threshold',
+          severity: 'warning',
+          timestamp: new Date(Date.now() - 900000).toISOString(), // 15 minutes ago
+          read: true,
+          serverId: '3',
+        },
+        {
+          id: '4',
+          title: 'Backup Completed',
+          message: 'Daily backup completed successfully',
+          severity: 'info',
+          timestamp: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+          read: true,
+          serverId: '2',
+        },
+      ];
+      await storeAlerts(sampleAlerts);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error initializing sample data:', error);
+    return false;
+  }
+};

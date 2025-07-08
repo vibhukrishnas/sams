@@ -2,6 +2,7 @@ import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
+  TextInput,
   StyleSheet,
   TouchableOpacity,
   Alert,
@@ -10,13 +11,14 @@ import {
   ScrollView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import {useAuth} from '../../sams-mobile/context/AuthContext';
-import PinInput from '../../sams-mobile/components/PinInput';
+import {useAuth} from '../../context/AuthContext';
+// import PinInput from '../../components/PinInput';
 
 const LoginScreen = () => {
   const {login, lockoutTime} = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [pin, setPin] = useState('');
 
   useEffect(() => {
     // Check for lockout on component mount
@@ -45,10 +47,15 @@ const LoginScreen = () => {
     }
   };
 
-  const handlePinChange = (pin) => {
+  const handlePinChange = (newPin) => {
+    setPin(newPin);
     // Clear error when user starts typing
-    if (error && pin.length > 0) {
+    if (error && newPin.length > 0) {
       setError('');
+    }
+    // Auto-submit when 4 digits are entered
+    if (newPin.length === 4) {
+      handlePinComplete(newPin);
     }
   };
 
@@ -90,11 +97,16 @@ const LoginScreen = () => {
             </View>
           ) : (
             <>
-              <PinInput
-                onPinComplete={handlePinComplete}
-                onPinChange={handlePinChange}
-                error={error}
-                disabled={isLoading}
+              <TextInput
+                style={styles.pinInput}
+                value={pin}
+                onChangeText={handlePinChange}
+                placeholder="Enter 4-digit PIN (1234)"
+                keyboardType="numeric"
+                maxLength={4}
+                secureTextEntry={true}
+                editable={!isLoading}
+                onSubmitEditing={() => handlePinComplete(pin)}
               />
 
               {isLoading && (
@@ -171,6 +183,20 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     textAlign: 'center',
     lineHeight: 24,
+  },
+  pinInput: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    letterSpacing: 8,
+    marginVertical: 20,
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+    color: '#1f2937',
   },
   loadingContainer: {
     flexDirection: 'row',

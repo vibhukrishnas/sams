@@ -9,8 +9,8 @@ import {
   Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import {useAuth} from '../../sams-mobile/context/AuthContext';
-import {getServerList, getAlerts} from '../../utils/storage';
+import {useAuth} from '../../context/AuthContext';
+import {getServerList, getAlerts, initializeSampleData} from '../../utils/storage';
 
 const DashboardHome = ({navigation}) => {
   const {user} = useAuth();
@@ -20,8 +20,30 @@ const DashboardHome = ({navigation}) => {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    loadDashboardData();
+    initializeData();
   }, []);
+
+  const initializeData = async () => {
+    // Initialize sample data if needed
+    await initializeSampleData();
+    // Load dashboard data
+    await loadDashboardData();
+  };
+
+  const formatTimestamp = (timestamp) => {
+    const now = new Date();
+    const alertTime = new Date(timestamp);
+    const diffMs = now - alertTime;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return alertTime.toLocaleDateString();
+  };
 
   const loadDashboardData = async () => {
     try {
@@ -250,7 +272,7 @@ const DashboardHome = ({navigation}) => {
               <View style={styles.alertContent}>
                 <Text style={styles.alertTitle}>{alert.title}</Text>
                 <Text style={styles.alertMessage}>{alert.message}</Text>
-                <Text style={styles.alertTime}>{alert.timestamp}</Text>
+                <Text style={styles.alertTime}>{formatTimestamp(alert.timestamp)}</Text>
               </View>
               {!alert.read && <View style={styles.unreadDot} />}
             </View>

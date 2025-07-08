@@ -7,7 +7,7 @@ import {
   Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import {useAuth} from '../../sams-mobile/context/AuthContext';
+import {useAuth} from '../../context/AuthContext';
 
 const Logout = ({navigation}) => {
   const {logout, user} = useAuth();

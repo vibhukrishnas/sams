@@ -14,7 +14,7 @@ import Alerts from '../screens/Dashboard/Alerts';
 import Logout from '../screens/Dashboard/Logout';
 
 // Import components
-import SidebarMenu from '../sams-mobile/components/SidebarMenu';
+import SidebarMenu from '../components/SidebarMenu';
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
