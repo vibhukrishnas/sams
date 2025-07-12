@@ -28,11 +28,11 @@ jobs:
     - name: Install dependencies
       working-directory: sams-frontend-testing
       run: npm ci || npm install
-      
+
     - name: Run tests
       working-directory: sams-frontend-testing
-      run: npm test || echo "Tests completed"
-      
+      run: npm run test || echo "Tests completed"
+
     - name: Run linting
       working-directory: sams-frontend-testing
       run: npm run lint || echo "Linting completed"
@@ -58,8 +58,8 @@ jobs:
       
     - name: Run tests
       working-directory: sams-backend
-      run: npm test || echo "Tests completed"
-      
+      run: npm run test || echo "Tests completed"
+
     - name: Run linting
       working-directory: sams-backend
       run: npm run lint || echo "Linting completed"
@@ -85,8 +85,8 @@ jobs:
       
     - name: Run tests
       working-directory: sams-mobile/TestApp
-      run: npm test || echo "Tests completed"
-      
+      run: npm run test || echo "Tests completed"
+
     - name: Run linting
       working-directory: sams-mobile/TestApp
       run: npm run lint || echo "Linting completed"
