@@ -1,0 +1,290 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+      external_labels:
+        cluster: 'sams-production'
+        environment: 'production'
+
+    rule_files:
+      - "/etc/prometheus/rules/*.yml"
+
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets:
+              - alertmanager:9093
+
+    scrape_configs:
+      # Kubernetes API Server
+      - job_name: 'kubernetes-apiservers'
+        kubernetes_sd_configs:
+        - role: endpoints
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+          action: keep
+          regex: default;kubernetes;https
+
+      # Kubernetes Nodes
+      - job_name: 'kubernetes-nodes'
+        kubernetes_sd_configs:
+        - role: node
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabel_configs:
+        - action: labelmap
+          regex: __meta_kubernetes_node_label_(.+)
+
+      # Kubernetes Pods
+      - job_name: 'kubernetes-pods'
+        kubernetes_sd_configs:
+        - role: pod
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+          action: keep
+          regex: true
+        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+          action: replace
+          target_label: __metrics_path__
+          regex: (.+)
+        - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+          action: replace
+          regex: ([^:]+)(?::\d+)?;(\d+)
+          replacement: $1:$2
+          target_label: __address__
+        - action: labelmap
+          regex: __meta_kubernetes_pod_label_(.+)
+        - source_labels: [__meta_kubernetes_namespace]
+          action: replace
+          target_label: kubernetes_namespace
+        - source_labels: [__meta_kubernetes_pod_name]
+          action: replace
+          target_label: kubernetes_pod_name
+
+      # SAMS Backend
+      - job_name: 'sams-backend'
+        kubernetes_sd_configs:
+        - role: pod
+          namespaces:
+            names:
+            - production
+            - staging
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_pod_label_app]
+          action: keep
+          regex: sams-backend
+        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+          action: keep
+          regex: true
+        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+          action: replace
+          target_label: __metrics_path__
+          regex: (.+)
+        - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+          action: replace
+          regex: ([^:]+)(?::\d+)?;(\d+)
+          replacement: $1:$2
+          target_label: __address__
+        - action: labelmap
+          regex: __meta_kubernetes_pod_label_(.+)
+        - source_labels: [__meta_kubernetes_namespace]
+          action: replace
+          target_label: environment
+        metric_relabel_configs:
+        - source_labels: [__name__]
+          regex: 'jvm_.*|http_.*|spring_.*|sams_.*'
+          action: keep
+
+      # SAMS Frontend (Nginx metrics)
+      - job_name: 'sams-frontend'
+        kubernetes_sd_configs:
+        - role: pod
+          namespaces:
+            names:
+            - production
+            - staging
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_pod_label_app]
+          action: keep
+          regex: sams-frontend
+        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+          action: keep
+          regex: true
+        - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+          action: replace
+          target_label: __metrics_path__
+          regex: (.+)
+        - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+          action: replace
+          regex: ([^:]+)(?::\d+)?;(\d+)
+          replacement: $1:$2
+          target_label: __address__
+        - action: labelmap
+          regex: __meta_kubernetes_pod_label_(.+)
+        - source_labels: [__meta_kubernetes_namespace]
+          action: replace
+          target_label: environment
+
+      # Node Exporter
+      - job_name: 'node-exporter'
+        kubernetes_sd_configs:
+        - role: endpoints
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_endpoints_name]
+          action: keep
+          regex: node-exporter
+        - source_labels: [__meta_kubernetes_endpoint_address_target_name]
+          action: replace
+          target_label: node
+
+      # kube-state-metrics
+      - job_name: 'kube-state-metrics'
+        static_configs:
+        - targets: ['kube-state-metrics:8080']
+
+      # cAdvisor
+      - job_name: 'cadvisor'
+        kubernetes_sd_configs:
+        - role: node
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabel_configs:
+        - action: labelmap
+          regex: __meta_kubernetes_node_label_(.+)
+        - target_label: __address__
+          replacement: kubernetes.default.svc:443
+        - source_labels: [__meta_kubernetes_node_name]
+          regex: (.+)
+          target_label: __metrics_path__
+          replacement: /api/v1/nodes/${1}/proxy/metrics/cadvisor
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-rules
+  namespace: monitoring
+data:
+  sams-alerts.yml: |
+    groups:
+    - name: sams.rules
+      rules:
+      # High CPU Usage
+      - alert: SAMSHighCPUUsage
+        expr: rate(container_cpu_usage_seconds_total{pod=~"sams-.*"}[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: "{{ $labels.app }}"
+          environment: "{{ $labels.environment }}"
+        annotations:
+          summary: "High CPU usage detected for {{ $labels.app }}"
+          description: "CPU usage is above 80% for {{ $labels.app }} in {{ $labels.environment }}"
+
+      # High Memory Usage
+      - alert: SAMSHighMemoryUsage
+        expr: (container_memory_usage_bytes{pod=~"sams-.*"} / container_spec_memory_limit_bytes{pod=~"sams-.*"}) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: "{{ $labels.app }}"
+          environment: "{{ $labels.environment }}"
+        annotations:
+          summary: "High memory usage detected for {{ $labels.app }}"
+          description: "Memory usage is above 85% for {{ $labels.app }} in {{ $labels.environment }}"
+
+      # Pod Restart Rate
+      - alert: SAMSHighPodRestartRate
+        expr: rate(kube_pod_container_status_restarts_total{pod=~"sams-.*"}[15m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          service: "{{ $labels.app }}"
+          environment: "{{ $labels.environment }}"
+        annotations:
+          summary: "High pod restart rate for {{ $labels.app }}"
+          description: "Pod {{ $labels.pod }} is restarting frequently in {{ $labels.environment }}"
+
+      # Service Down
+      - alert: SAMSServiceDown
+        expr: up{job=~"sams-.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: "{{ $labels.job }}"
+          environment: "{{ $labels.environment }}"
+        annotations:
+          summary: "SAMS service is down"
+          description: "{{ $labels.job }} service is down in {{ $labels.environment }}"
+
+      # High Response Time
+      - alert: SAMSHighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=~"sams-.*"}[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: "{{ $labels.job }}"
+          environment: "{{ $labels.environment }}"
+        annotations:
+          summary: "High response time for {{ $labels.job }}"
+          description: "95th percentile response time is above 2s for {{ $labels.job }} in {{ $labels.environment }}"
+
+      # High Error Rate
+      - alert: SAMSHighErrorRate
+        expr: rate(http_requests_total{job=~"sams-.*",status=~"5.."}[5m]) / rate(http_requests_total{job=~"sams-.*"}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          service: "{{ $labels.job }}"
+          environment: "{{ $labels.environment }}"
+        annotations:
+          summary: "High error rate for {{ $labels.job }}"
+          description: "Error rate is above 5% for {{ $labels.job }} in {{ $labels.environment }}"
+
+      # Database Connection Issues
+      - alert: SAMSDatabaseConnectionIssues
+        expr: spring_datasource_active_connections{job="sams-backend"} / spring_datasource_max_connections{job="sams-backend"} > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: "sams-backend"
+          environment: "{{ $labels.environment }}"
+        annotations:
+          summary: "Database connection pool usage is high"
+          description: "Database connection pool usage is above 80% for backend in {{ $labels.environment }}"
+
+      # Deployment Failure
+      - alert: SAMSDeploymentFailure
+        expr: kube_deployment_status_replicas_unavailable{deployment=~"sams-.*"} > 0
+        for: 2m
+        labels:
+          severity: critical
+          service: "{{ $labels.deployment }}"
+          environment: "{{ $labels.namespace }}"
+        annotations:
+          summary: "Deployment failure detected"
+          description: "{{ $labels.deployment }} has unavailable replicas in {{ $labels.namespace }}"
+
+      # Disk Space Usage
+      - alert: SAMSHighDiskUsage
+        expr: (node_filesystem_size_bytes{mountpoint="/"} - node_filesystem_free_bytes{mountpoint="/"}) / node_filesystem_size_bytes{mountpoint="/"} * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High disk usage on {{ $labels.instance }}"
+          description: "Disk usage is above 85% on {{ $labels.instance }}"

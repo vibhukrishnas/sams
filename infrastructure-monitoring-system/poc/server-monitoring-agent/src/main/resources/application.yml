@@ -1,0 +1,95 @@
+# SAMS Server Monitoring Agent Configuration
+# POC Version 1.0.0
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+
+spring:
+  application:
+    name: sams-server-monitoring-agent
+  
+  # Database Configuration (H2 for POC)
+  datasource:
+    url: jdbc:h2:mem:sams_monitoring
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+  
+  # Security Configuration
+  security:
+    user:
+      name: admin
+      password: sams123
+      roles: ADMIN
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Logging Configuration
+logging:
+  level:
+    com.sams.monitoring: INFO
+    org.springframework.web.socket: DEBUG
+    org.springframework.security: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/sams-monitoring-agent.log
+
+# Custom Application Properties
+sams:
+  monitoring:
+    # Metrics collection interval in seconds
+    collection-interval: 5
+    # Enable/disable specific metric types
+    metrics:
+      cpu: true
+      memory: true
+      disk: true
+      network: true
+      processes: true
+    # WebSocket configuration
+    websocket:
+      streaming-interval: 5
+      max-connections: 100
+    # Alert thresholds
+    alerts:
+      cpu-threshold: 80.0
+      memory-threshold: 85.0
+      disk-threshold: 90.0
+    # Agent identification
+    agent:
+      id: ${HOSTNAME:localhost}
+      version: 1.0.0
+      environment: development

@@ -79,3 +79,27 @@ Cargo.lock
 **/.gradle/
 **/gradle/caches/
 **/.android/gradle/
+
+# Large files and installers
+*.exe
+*.msi
+*.dmg
+*.pkg
+*.deb
+*.rpm
+VirtualBox*
+*.iso
+*.zip
+*.tar.gz
+*.rar
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Monitoring data
+prometheus_data/
+grafana_data/
+influxdb_data/
+elasticsearch_data/

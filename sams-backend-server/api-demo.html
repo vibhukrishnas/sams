@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAMS API Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        .api-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #e74c3c;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+        .api-section h3 {
+            color: #e74c3c;
+            margin-top: 0;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        .response {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status.success { background: #27ae60; color: white; }
+        .status.error { background: #e74c3c; color: white; }
+        .endpoint {
+            background: #34495e;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            display: inline-block;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 SAMS Backend API Demo</h1>
+        <p style="text-align: center; font-size: 18px; color: #7f8c8d;">
+            Test all SAMS API endpoints in real-time
+        </p>
+
+        <div class="api-section">
+            <h3>🔍 Health Check</h3>
+            <div class="endpoint">GET /api/health</div>
+            <button onclick="testHealth()">Test Health Check</button>
+            <div id="health-response" class="response" style="display: none;"></div>
+        </div>
+
+        <div class="api-section">
+            <h3>🖥️ Server Management</h3>
+            <div class="endpoint">GET /api/servers</div>
+            <button onclick="testServers()">Get All Servers</button>
+            <button onclick="testServerById()">Get Server #1</button>
+            <div id="servers-response" class="response" style="display: none;"></div>
+        </div>
+
+        <div class="api-section">
+            <h3>🚨 Alert System</h3>
+            <div class="endpoint">GET /api/alerts</div>
+            <button onclick="testAlerts()">Get All Alerts</button>
+            <button onclick="testAcknowledgeAlert()">Acknowledge Alert #1</button>
+            <div id="alerts-response" class="response" style="display: none;"></div>
+        </div>
+
+        <div class="api-section">
+            <h3>📊 System Metrics</h3>
+            <div class="endpoint">GET /api/metrics</div>
+            <button onclick="testMetrics()">Get System Metrics</button>
+            <div id="metrics-response" class="response" style="display: none;"></div>
+        </div>
+
+        <div class="api-section">
+            <h3>📋 Report Generation</h3>
+            <div class="endpoint">GET /api/reports</div>
+            <div class="endpoint">POST /api/reports/generate</div>
+            <button onclick="testReports()">Get All Reports</button>
+            <button onclick="testGenerateReport()">Generate New Report</button>
+            <div id="reports-response" class="response" style="display: none;"></div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px; padding: 20px; background: #ecf0f1; border-radius: 10px;">
+            <h3>🎯 Ready for Mobile App Integration!</h3>
+            <p>All endpoints are working. Update your React Native app to use:</p>
+            <div class="endpoint">http://10.0.2.2:3000/api</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+
+        async function makeRequest(url, method = 'GET', data = null) {
+            try {
+                const options = {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                };
+                
+                if (data) {
+                    options.body = JSON.stringify(data);
+                }
+
+                const response = await fetch(url, options);
+                const result = await response.json();
+                
+                return {
+                    status: response.status,
+                    data: result
+                };
+            } catch (error) {
+                return {
+                    status: 'ERROR',
+                    data: { error: error.message }
+                };
+            }
+        }
+
+        function displayResponse(elementId, response) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            
+            const statusClass = response.status === 200 ? 'success' : 'error';
+            const statusText = response.status === 200 ? 'SUCCESS' : 'ERROR';
+            
+            element.innerHTML = `<span class="status ${statusClass}">${statusText} ${response.status}</span>\n\n${JSON.stringify(response.data, null, 2)}`;
+        }
+
+        async function testHealth() {
+            const response = await makeRequest(`${API_BASE}/health`);
+            displayResponse('health-response', response);
+        }
+
+        async function testServers() {
+            const response = await makeRequest(`${API_BASE}/servers`);
+            displayResponse('servers-response', response);
+        }
+
+        async function testServerById() {
+            const response = await makeRequest(`${API_BASE}/servers/1`);
+            displayResponse('servers-response', response);
+        }
+
+        async function testAlerts() {
+            const response = await makeRequest(`${API_BASE}/alerts`);
+            displayResponse('alerts-response', response);
+        }
+
+        async function testAcknowledgeAlert() {
+            const response = await makeRequest(`${API_BASE}/alerts/1/acknowledge`, 'POST');
+            displayResponse('alerts-response', response);
+        }
+
+        async function testMetrics() {
+            const response = await makeRequest(`${API_BASE}/metrics`);
+            displayResponse('metrics-response', response);
+        }
+
+        async function testReports() {
+            const response = await makeRequest(`${API_BASE}/reports`);
+            displayResponse('reports-response', response);
+        }
+
+        async function testGenerateReport() {
+            const reportData = {
+                name: 'Demo API Test Report',
+                type: 'performance',
+                format: 'PDF'
+            };
+            const response = await makeRequest(`${API_BASE}/reports/generate`, 'POST', reportData);
+            displayResponse('reports-response', response);
+        }
+
+        // Auto-test health on page load
+        window.onload = function() {
+            testHealth();
+        };
+    </script>
+</body>
+</html>

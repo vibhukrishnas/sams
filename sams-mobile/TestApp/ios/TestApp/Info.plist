@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleDisplayName</key>
+	<string>TestApp</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+	  <!-- Do not change NSAllowsArbitraryLoads to true, or you will risk app rejection! -->
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>SAMS Monitor needs location access for emergency SOS alerts and server location tracking.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>SAMS Monitor needs location access for emergency SOS alerts and server location tracking.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>SAMS Monitor needs camera access to scan QR codes for server configuration.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>SAMS Monitor needs microphone access for voice commands and emergency alerts.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>SAMS Monitor uses Face ID for secure authentication.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>SAMS Monitor needs contacts access for emergency contact management.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>SAMS Monitor needs photo library access to save screenshots and reports.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>SAMS Monitor needs photo library access to save screenshots and reports.</string>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>SAMS Monitor sends critical alerts and notifications for server monitoring.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>SAMS Monitor needs local network access to communicate with servers and monitoring agents.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>SAMS Monitor uses Bluetooth for wearable device integration.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>SAMS Monitor uses Bluetooth for wearable device integration.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>background-fetch</string>
+		<string>background-processing</string>
+		<string>remote-notification</string>
+		<string>background-app-refresh</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.sams.monitor.background-sync</string>
+		<string>com.sams.monitor.health-check</string>
+		<string>com.sams.monitor.alert-processing</string>
+	</array>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>armv7</string>
+	</array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<false/>
+	<key>UIUserInterfaceStyle</key>
+	<string>Automatic</string>
+	<key>UISupportsDocumentBrowser</key>
+	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.sams.monitor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>sams-monitor</string>
+			</array>
+		</dict>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>tel</string>
+		<string>mailto</string>
+		<string>sms</string>
+		<string>http</string>
+		<string>https</string>
+	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>NSSupportsAutomaticTermination</key>
+	<true/>
+	<key>NSSupportsSuddenTermination</key>
+	<true/>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleDefault</string>
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+</dict>
+</plist>

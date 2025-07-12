@@ -1,0 +1,48 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: sams-enterprise-backend
+    
+  profiles:
+    active: minimal
+    
+  # Use H2 in-memory database
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+    
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    
+  # Disable everything else
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.ldap.LdapDataAutoConfiguration
+      - org.springframework.boot.autoconfigure.ldap.LdapAutoConfiguration
+      - org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+
+# JWT Configuration
+jwt:
+  secret: sams-dev-secret-key
+  expiration: 86400000
+  refresh-expiration: 604800000
+
+# Logging
+logging:
+  level:
+    com.sams.enterprise: INFO
+    org.springframework: WARN
+    org.hibernate: WARN

@@ -1,0 +1,28 @@
+{
+  "server_url": "http://localhost:8080",
+  "api_key": "",
+  "agent_id": "",
+  "collection_interval": 30,
+  "log_level": "INFO",
+  "log_file": "sams_agent.log",
+  "metrics": {
+    "cpu": true,
+    "memory": true,
+    "disk": true,
+    "network": true,
+    "processes": true
+  },
+  "thresholds": {
+    "cpu_warning": 80,
+    "cpu_critical": 95,
+    "memory_warning": 85,
+    "memory_critical": 95,
+    "disk_warning": 85,
+    "disk_critical": 95
+  },
+  "retry": {
+    "max_retries": 3,
+    "retry_delay": 5,
+    "backoff_factor": 2
+  }
+}

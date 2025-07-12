@@ -1,0 +1,233 @@
+# SAMS User Management Service Configuration
+
+server:
+  port: 8081
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+  http2:
+    enabled: true
+
+spring:
+  application:
+    name: user-management-service
+  
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  
+  # Database Configuration
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/sams_user_management}
+    username: ${DATABASE_USERNAME:sams_user}
+    password: ${DATABASE_PASSWORD:sams_password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+      leak-detection-threshold: 60000
+  
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: ${DDL_AUTO:validate}
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: ${SHOW_SQL:false}
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+  
+  # Redis Configuration
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+  
+  # Security Configuration
+  security:
+    user:
+      name: admin
+      password: admin
+      roles: ADMIN
+
+# SAMS Specific Configuration
+sams:
+  jwt:
+    secret: ${JWT_SECRET:sams-jwt-secret-key-change-in-production-environment}
+    issuer: ${JWT_ISSUER:sams-user-management}
+    audience: ${JWT_AUDIENCE:sams-infrastructure-monitoring}
+    access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:900} # 15 minutes
+    refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:604800} # 7 days
+  
+  password:
+    policy:
+      min-length: ${PASSWORD_MIN_LENGTH:8}
+      max-length: ${PASSWORD_MAX_LENGTH:128}
+      require-uppercase: ${PASSWORD_REQUIRE_UPPERCASE:true}
+      require-lowercase: ${PASSWORD_REQUIRE_LOWERCASE:true}
+      require-digits: ${PASSWORD_REQUIRE_DIGITS:true}
+      require-special-chars: ${PASSWORD_REQUIRE_SPECIAL_CHARS:true}
+      max-age-days: ${PASSWORD_MAX_AGE_DAYS:90}
+      history-count: ${PASSWORD_HISTORY_COUNT:5}
+  
+  ldap:
+    enabled: ${LDAP_ENABLED:false}
+    url: ${LDAP_URL:ldap://localhost:389}
+    base-dn: ${LDAP_BASE_DN:dc=company,dc=com}
+    user-dn-pattern: ${LDAP_USER_DN_PATTERN:uid={0},ou=people}
+    group-search-base: ${LDAP_GROUP_SEARCH_BASE:ou=groups}
+    group-search-filter: ${LDAP_GROUP_SEARCH_FILTER:member={0}}
+    manager-dn: ${LDAP_MANAGER_DN:}
+    manager-password: ${LDAP_MANAGER_PASSWORD:}
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,env,configprops
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      show-components: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: true
+    os:
+      enabled: true
+
+# Logging Configuration
+logging:
+  level:
+    com.sams: ${LOG_LEVEL:INFO}
+    org.springframework.security: ${SECURITY_LOG_LEVEL:WARN}
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:WARN}
+    org.hibernate.type.descriptor.sql.BasicBinder: ${SQL_PARAM_LOG_LEVEL:WARN}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: ${LOG_FILE:logs/user-management-service.log}
+
+# OpenAPI Documentation
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+  info:
+    title: SAMS User Management Service API
+    description: User Management Service for SAMS Infrastructure Monitoring System
+    version: 1.0.0
+    contact:
+      name: SAMS Development Team
+      email: dev@sams.com
+    license:
+      name: MIT License
+      url: https://opensource.org/licenses/MIT
+
+---
+# Development Profile
+spring:
+  config:
+    activate:
+      on-profile: dev
+  
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+  
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+sams:
+  jwt:
+    secret: dev-secret-key-not-for-production
+  
+logging:
+  level:
+    com.sams: DEBUG
+    org.springframework.security: DEBUG
+
+---
+# Test Profile
+spring:
+  config:
+    activate:
+      on-profile: test
+  
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+
+sams:
+  jwt:
+    secret: test-secret-key
+    access-token-expiration: 60 # 1 minute for testing
+    refresh-token-expiration: 300 # 5 minutes for testing
+
+logging:
+  level:
+    com.sams: WARN
+    org.springframework: WARN
+
+---
+# Production Profile
+spring:
+  config:
+    activate:
+      on-profile: prod
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+logging:
+  level:
+    com.sams: INFO
+    org.springframework: WARN
+    org.hibernate: WARN

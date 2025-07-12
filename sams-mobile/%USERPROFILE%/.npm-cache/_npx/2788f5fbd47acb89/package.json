@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "@react-native-community/cli": "^19.1.0"
+  },
+  "_npx": {
+    "packages": [
+      "@react-native-community/cli@latest"
+    ]
+  }
+}
