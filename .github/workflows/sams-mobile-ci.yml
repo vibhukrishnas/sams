@@ -248,16 +248,12 @@ jobs:
       run: npm audit --audit-level=moderate || echo "Audit completed"
 
     - name: Snyk Security Scan
-      if: ${{ secrets.SNYK_TOKEN != '' }}
       uses: snyk/actions/node@master
       env:
         SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
         args: --severity-threshold=high
-
-    - name: Skip Snyk Scan
-      if: ${{ secrets.SNYK_TOKEN == '' }}
-      run: echo "Snyk scan skipped - SNYK_TOKEN not configured"
+      continue-on-error: true
 
   deploy-staging:
     name: Deploy to Staging
