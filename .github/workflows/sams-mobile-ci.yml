@@ -2,7 +2,7 @@ name: SAMS Mobile CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop, feature/* ]
+    branches: [ main, develop, test/*, feature/* ]
     paths:
       - 'sams-mobile/**'
       - '.github/workflows/sams-mobile-ci.yml'
@@ -10,6 +10,7 @@ on:
     branches: [ main, develop ]
     paths:
       - 'sams-mobile/**'
+  workflow_dispatch:
 
 env:
   NODE_VERSION: '18'

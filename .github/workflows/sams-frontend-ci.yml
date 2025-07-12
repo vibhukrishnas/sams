@@ -2,7 +2,7 @@ name: SAMS Frontend CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop, feature/* ]
+    branches: [ main, develop, test/*, feature/* ]
     paths:
       - 'sams-frontend-testing/**'
       - '.github/workflows/sams-frontend-ci.yml'
@@ -10,6 +10,7 @@ on:
     branches: [ main, develop ]
     paths:
       - 'sams-frontend-testing/**'
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
