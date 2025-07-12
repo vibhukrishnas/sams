@@ -103,3 +103,9 @@ prometheus_data/
 grafana_data/
 influxdb_data/
 elasticsearch_data/
+
+# SAMS Android SDK - Exclude from version control
+AndroidSDK/
+android-sdk/
+Android/Sdk/
+%USERPROFILE%/
