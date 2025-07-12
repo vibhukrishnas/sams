@@ -1,5 +1,10 @@
 # SAMS - Server and Application Monitoring System
 
+[![CI/CD Pipeline](https://github.com/vibhukrishnas/sams/actions/workflows/sams-simple-ci.yml/badge.svg)](https://github.com/vibhukrishnas/sams/actions/workflows/sams-simple-ci.yml)
+[![Backend CI](https://github.com/vibhukrishnas/sams/actions/workflows/sams-backend-ci.yml/badge.svg)](https://github.com/vibhukrishnas/sams/actions/workflows/sams-backend-ci.yml)
+[![Frontend CI](https://github.com/vibhukrishnas/sams/actions/workflows/sams-frontend-ci.yml/badge.svg)](https://github.com/vibhukrishnas/sams/actions/workflows/sams-frontend-ci.yml)
+[![Mobile CI](https://github.com/vibhukrishnas/sams/actions/workflows/sams-mobile-ci.yml/badge.svg)](https://github.com/vibhukrishnas/sams/actions/workflows/sams-mobile-ci.yml)
+
 A comprehensive enterprise-grade monitoring solution with real-time alerts, mobile app, and advanced analytics.
 
 ## 🎉 **PROJECT COMPLETE!**
