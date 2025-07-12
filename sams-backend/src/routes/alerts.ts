@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { body, query, validationResult } from 'express-validator';
 import { DatabaseService } from '../services/DatabaseService';
 import { NotificationService } from '../services/NotificationService';
@@ -17,7 +17,7 @@ router.get('/',
     query('server_id').optional().isUUID(),
     query('category').optional().isIn(['system', 'performance', 'application', 'security', 'network'])
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -98,7 +98,7 @@ router.get('/',
 );
 
 // Get alert by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const db = DatabaseService.getConnection();
@@ -152,7 +152,7 @@ router.post('/',
     body('metric_value').optional().isNumeric(),
     body('threshold_value').optional().isNumeric()
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -201,7 +201,7 @@ router.post('/:id/acknowledge',
   [
     body('note').optional().trim()
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       const { note } = req.body;
@@ -250,7 +250,7 @@ router.post('/:id/resolve',
   [
     body('note').optional().trim()
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       const { note } = req.body;
@@ -295,7 +295,7 @@ router.post('/:id/resolve',
 );
 
 // Escalate alert
-router.post('/:id/escalate', async (req, res) => {
+router.post('/:id/escalate', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const db = DatabaseService.getConnection();
@@ -339,7 +339,7 @@ router.post('/:id/escalate', async (req, res) => {
 });
 
 // Get alert statistics
-router.get('/stats/summary', async (req, res) => {
+router.get('/stats/summary', async (req: Request, res: Response) => {
   try {
     const db = DatabaseService.getConnection();
 

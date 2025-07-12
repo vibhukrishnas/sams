@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { body, validationResult } from 'express-validator';
@@ -24,7 +24,7 @@ router.post('/login',
     body('username').isLength({ min: 3 }).trim().escape(),
     body('password').isLength({ min: 6 })
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -93,13 +93,13 @@ router.post('/login',
 
       // Generate JWT token
       const token = jwt.sign(
-        { 
-          userId: user.id, 
-          username: user.username, 
-          role: user.role 
+        {
+          userId: user.id,
+          username: user.username,
+          role: user.role
         },
         process.env.JWT_SECRET || 'your-secret-key',
-        { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
+        { expiresIn: '24h' }
       );
 
       // Remove sensitive data from user object
@@ -130,7 +130,7 @@ router.post('/validate-pin',
   [
     body('pin').isLength({ min: 4, max: 6 }).isNumeric()
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -194,7 +194,7 @@ router.post('/register',
     body('password').isLength({ min: 6 }),
     body('role').isIn(['admin', 'operator', 'viewer']).optional()
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -257,7 +257,7 @@ router.post('/register',
 );
 
 // Refresh token endpoint
-router.post('/refresh', async (req, res) => {
+router.post('/refresh', async (req: Request, res: Response) => {
   try {
     const { token } = req.body;
     
@@ -273,13 +273,13 @@ router.post('/refresh', async (req, res) => {
     
     // Generate new token
     const newToken = jwt.sign(
-      { 
-        userId: decoded.userId, 
-        username: decoded.username, 
-        role: decoded.role 
+      {
+        userId: decoded.userId,
+        username: decoded.username,
+        role: decoded.role
       },
       process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
+      { expiresIn: '24h' }
     );
 
     res.json({

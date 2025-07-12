@@ -38,7 +38,7 @@ export class NotificationService {
       }
 
       // Initialize email transporter
-      this.emailTransporter = nodemailer.createTransporter({
+      this.emailTransporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST || 'localhost',
         port: parseInt(process.env.SMTP_PORT || '587'),
         secure: process.env.SMTP_SECURE === 'true',
@@ -115,7 +115,7 @@ export class NotificationService {
 
         } catch (error) {
           logger.error(`Failed to send ${channel.type} notification:`, error);
-          await this.logNotification(alert.id, channel.type, 'failed', error.message);
+          await this.logNotification(alert.id, channel.type, 'failed', error instanceof Error ? error.message : 'Unknown error');
         }
       }
     } catch (error) {
