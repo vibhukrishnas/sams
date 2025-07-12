@@ -54,11 +54,18 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
-        cache-dependency-path: sams-backend/package-lock.json
+        cache-dependency-path: |
+          sams-backend/package-lock.json
+          sams-backend/package.json
 
     - name: Install dependencies
       working-directory: sams-backend
-      run: npm ci || npm install
+      run: |
+        if [ -f package-lock.json ]; then
+          npm ci
+        else
+          npm install
+        fi
 
     - name: Run linting
       working-directory: sams-backend
@@ -112,11 +119,18 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
-        cache-dependency-path: sams-backend/package-lock.json
+        cache-dependency-path: |
+          sams-backend/package-lock.json
+          sams-backend/package.json
 
     - name: Install dependencies
       working-directory: sams-backend
-      run: npm ci || npm install
+      run: |
+        if [ -f package-lock.json ]; then
+          npm ci
+        else
+          npm install
+        fi
 
     - name: Run npm audit
       working-directory: sams-backend
@@ -157,11 +171,18 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
-        cache-dependency-path: sams-backend/package-lock.json
+        cache-dependency-path: |
+          sams-backend/package-lock.json
+          sams-backend/package.json
 
     - name: Install dependencies
       working-directory: sams-backend
-      run: npm ci || npm install
+      run: |
+        if [ -f package-lock.json ]; then
+          npm ci
+        else
+          npm install
+        fi
 
     - name: Build application
       working-directory: sams-backend

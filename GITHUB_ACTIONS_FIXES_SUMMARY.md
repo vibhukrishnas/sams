@@ -98,6 +98,22 @@ Fixed all GitHub Actions workflow errors that were causing build failures across
 - `.github/workflows/sams-simple-ci.yml` - Fixed script references
 - `README.md` - Added CI/CD status badges
 
+## Latest Fix: Secrets Conditional Syntax (July 12, 2025)
+
+### Issue
+GitHub Actions workflows were failing with "Unrecognized named-value: 'secrets'" errors when trying to use conditional expressions like `if: ${{ secrets.SONAR_TOKEN != '' }}`.
+
+### Root Cause
+GitHub Actions doesn't allow direct conditional checks on secrets context in `if` statements.
+
+### Solution Applied
+- Removed all conditional checks for secrets (SONAR_TOKEN, SNYK_TOKEN) from:
+  - `sams-backend-ci.yml`
+  - `sams-frontend-ci.yml`
+  - `sams-mobile-ci.yml`
+- Added `continue-on-error: true` to optional security scanning steps
+- This allows workflows to proceed even if security tokens are not configured
+
 ## Current Workflow Status
 
 All workflows should now:
@@ -107,6 +123,7 @@ All workflows should now:
 - ✅ Support the actual technology stack
 - ✅ Build and test successfully
 - ✅ Generate proper artifacts
+- ✅ Start successfully without secrets conditional syntax errors
 
 ## Next Steps
 
