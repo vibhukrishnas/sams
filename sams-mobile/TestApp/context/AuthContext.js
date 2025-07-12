@@ -1,6 +1,6 @@
 import React, {createContext, useContext, useState, useEffect} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {validatePin} from '../../utils/validatePin';
+import {validatePin} from '../utils/validatePin';
 
 const AuthContext = createContext();
 
@@ -54,23 +54,32 @@ export const AuthProvider = ({children}) => {
 
   const login = async (pin) => {
     try {
+      console.log('🔐 Login attempt with PIN:', pin);
+
       // Check if account is locked
       if (lockoutTime && Date.now() < lockoutTime) {
         const remainingTime = Math.ceil((lockoutTime - Date.now()) / 1000 / 60);
-        throw new Error(`Account is locked. Try again in ${remainingTime} minutes.`);
+        return {
+          success: false,
+          error: `Account is locked. Try again in ${remainingTime} minutes.`
+        };
       }
 
-      // Validate PIN
+      // Validate PIN - Enhanced validation
+      console.log('🔍 Validating PIN...');
       const isValid = await validatePin(pin);
-      
+      console.log('✅ PIN validation result:', isValid);
+
       if (isValid) {
+        console.log('🎉 Login successful!');
+
         // Reset login attempts on successful login
         setLoginAttempts(0);
         await AsyncStorage.removeItem('loginAttempts');
         await AsyncStorage.removeItem('lockoutTime');
         setLockoutTime(null);
 
-        // Create mock user data
+        // Create user data
         const userData = {
           id: '1',
           name: 'System Administrator',
@@ -80,13 +89,15 @@ export const AuthProvider = ({children}) => {
         };
 
         // Store authentication data
-        await AsyncStorage.setItem('authToken', 'mock-jwt-token');
+        await AsyncStorage.setItem('authToken', 'sams-jwt-token-' + Date.now());
         await AsyncStorage.setItem('userData', JSON.stringify(userData));
 
         setUser(userData);
         setIsAuthenticated(true);
-        return {success: true};
+        return {success: true, user: userData};
       } else {
+        console.log('❌ Invalid PIN');
+
         // Increment login attempts
         const newAttempts = loginAttempts + 1;
         setLoginAttempts(newAttempts);
@@ -98,14 +109,24 @@ export const AuthProvider = ({children}) => {
           const lockoutTimestamp = Date.now() + lockoutDuration;
           await AsyncStorage.setItem('lockoutTime', lockoutTimestamp.toString());
           setLockoutTime(lockoutTimestamp);
-          throw new Error('Too many failed attempts. Account locked for 15 minutes.');
+          return {
+            success: false,
+            error: 'Too many failed attempts. Account locked for 15 minutes.'
+          };
         }
 
         const remainingAttempts = 5 - newAttempts;
-        throw new Error(`Invalid PIN. ${remainingAttempts} attempts remaining.`);
+        return {
+          success: false,
+          error: `Invalid PIN. ${remainingAttempts} attempts remaining.`
+        };
       }
     } catch (error) {
-      return {success: false, error: error.message};
+      console.error('🚨 Login error:', error);
+      return {
+        success: false,
+        error: error.message || 'Authentication failed. Please try again.'
+      };
     }
   };
 

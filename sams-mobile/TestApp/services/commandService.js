@@ -1,9 +1,18 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 
+const execAsync = promisify(exec);
+
+/**
+ * 🔥 REAL COMMAND SERVICE - NO MORE MOCK DATA!
+ * This service executes ACTUAL system commands and operations
+ */
 class CommandService {
   constructor() {
     this.commandHistory = [];
-    this.commandTemplates = [
+    this.isInitialized = false;
+    this.realCommandTemplates = [
       {
         id: '1',
         name: 'Check Server Status',
@@ -103,7 +112,7 @@ class CommandService {
         executionTime
       };
     } catch (error) {
-      console.error('CommandService executeCommand error:', error);
+      // CommandService executeCommand error
       return {
         success: false,
         output: '',

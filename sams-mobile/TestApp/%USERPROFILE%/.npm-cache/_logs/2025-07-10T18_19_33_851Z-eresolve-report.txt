@@ -1,0 +1,22 @@
+'Log files:
+D:\Projects\SAMS\sams-mobile\TestApp\%USERPROFILE%\.npm-cache\_logs\2025-07-10T18_19_33_851Z-debug-0.log
+
+# npm resolution error report
+
+While resolving: TestApp@0.0.1
+Found: @react-navigation/bottom-tabs@7.4.2
+node_modules/@react-navigation/bottom-tabs
+  @react-navigation/bottom-tabs@"^6.6.1" from the root project
+
+Could not resolve dependency:
+@react-navigation/bottom-tabs@"^6.6.1" from the root project
+
+Conflicting peer dependency: @react-navigation/native@6.1.18
+node_modules/@react-navigation/native
+  peer @react-navigation/native@"^6.0.0" from @react-navigation/bottom-tabs@6.6.1
+  node_modules/@react-navigation/bottom-tabs
+    @react-navigation/bottom-tabs@"^6.6.1" from the root project
+
+Fix the upstream dependency conflict, or retry
+this command with --force or --legacy-peer-deps
+to accept an incorrect (and potentially broken) dependency resolution.

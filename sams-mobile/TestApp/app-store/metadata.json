@@ -1,0 +1,281 @@
+{
+  "app": {
+    "name": "SAMS Monitor",
+    "bundleId": "com.sams.monitor",
+    "version": "1.0.0",
+    "buildNumber": "1",
+    "category": "Business",
+    "subcategory": "Productivity",
+    "contentRating": "4+",
+    "supportedLanguages": ["en-US", "es-ES", "fr-FR", "de-DE", "ja-JP"],
+    "minimumOSVersion": {
+      "ios": "12.0",
+      "android": "21"
+    },
+    "targetSDKVersion": {
+      "ios": "16.0",
+      "android": "33"
+    }
+  },
+  "description": {
+    "short": "Enterprise server monitoring and alert management system for IT professionals.",
+    "long": "SAMS Monitor is a comprehensive enterprise-grade mobile application designed for IT professionals and system administrators who need real-time monitoring and alert management capabilities.\n\nKey Features:\n• Real-time server monitoring and health tracking\n• Advanced alert management with voice commands\n• Intelligent alert correlation and escalation\n• Comprehensive analytics and reporting\n• Multi-server dashboard with customizable views\n• Offline functionality for critical operations\n• Enterprise-grade security with biometric authentication\n• Dark mode and accessibility features\n• Voice-powered alert acknowledgment and resolution\n• Gesture-based navigation for quick actions\n\nPerfect for:\n• System Administrators\n• DevOps Engineers\n• IT Managers\n• Network Operations Centers (NOC)\n• Managed Service Providers\n• Enterprise IT Teams\n\nSAMS Monitor helps you stay connected to your infrastructure 24/7, ensuring rapid response to critical issues and maintaining optimal system performance. With advanced features like voice commands, intelligent filtering, and real-time analytics, managing your server infrastructure has never been easier.\n\nThe app supports multiple authentication methods including PIN, biometric (Touch ID/Face ID/Fingerprint), and integrates seamlessly with your existing monitoring infrastructure.\n\nDownload SAMS Monitor today and take control of your server monitoring from anywhere, anytime."
+  },
+  "keywords": [
+    "server monitoring",
+    "alert management",
+    "system administration",
+    "DevOps",
+    "infrastructure monitoring",
+    "IT management",
+    "enterprise",
+    "real-time monitoring",
+    "voice commands",
+    "analytics",
+    "dashboard",
+    "notifications",
+    "business",
+    "productivity",
+    "network monitoring"
+  ],
+  "pricing": {
+    "model": "freemium",
+    "basePrice": 0,
+    "premiumTiers": [
+      {
+        "name": "Professional",
+        "price": 9.99,
+        "period": "monthly",
+        "features": [
+          "Up to 50 servers",
+          "Advanced analytics",
+          "Voice commands",
+          "Priority support"
+        ]
+      },
+      {
+        "name": "Enterprise",
+        "price": 29.99,
+        "period": "monthly",
+        "features": [
+          "Unlimited servers",
+          "Custom integrations",
+          "Advanced reporting",
+          "24/7 support",
+          "White-label options"
+        ]
+      }
+    ]
+  },
+  "contact": {
+    "supportEmail": "support@sams-monitor.com",
+    "website": "https://www.sams-monitor.com",
+    "privacyPolicy": "https://www.sams-monitor.com/privacy",
+    "termsOfService": "https://www.sams-monitor.com/terms",
+    "supportUrl": "https://support.sams-monitor.com"
+  },
+  "marketing": {
+    "tagline": "Monitor. Alert. Respond. Anywhere.",
+    "highlights": [
+      "Real-time server monitoring",
+      "Voice-powered alert management",
+      "Enterprise-grade security",
+      "Intelligent analytics",
+      "24/7 infrastructure oversight"
+    ],
+    "targetAudience": [
+      "System Administrators",
+      "DevOps Engineers",
+      "IT Managers",
+      "MSP Technicians"
+    ],
+    "competitiveAdvantages": [
+      "Voice command integration",
+      "Advanced alert correlation",
+      "Mobile-first design",
+      "Offline functionality",
+      "Comprehensive analytics"
+    ]
+  },
+  "technical": {
+    "permissions": {
+      "ios": [
+        "NSMicrophoneUsageDescription",
+        "NSCameraUsageDescription",
+        "NSLocationWhenInUseUsageDescription",
+        "NSUserNotificationsUsageDescription",
+        "NSFaceIDUsageDescription"
+      ],
+      "android": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.VIBRATE",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE"
+      ]
+    },
+    "features": [
+      "Real-time notifications",
+      "Background processing",
+      "Biometric authentication",
+      "Voice recognition",
+      "Camera integration",
+      "Location services",
+      "Offline storage",
+      "Push notifications"
+    ],
+    "integrations": [
+      "REST APIs",
+      "WebSocket connections",
+      "SNMP monitoring",
+      "Syslog integration",
+      "Email notifications",
+      "Slack integration",
+      "Microsoft Teams",
+      "PagerDuty"
+    ]
+  },
+  "screenshots": {
+    "ios": {
+      "iPhone": [
+        "screenshots/ios/iphone/01-dashboard.png",
+        "screenshots/ios/iphone/02-alerts.png",
+        "screenshots/ios/iphone/03-alert-details.png",
+        "screenshots/ios/iphone/04-voice-commands.png",
+        "screenshots/ios/iphone/05-analytics.png",
+        "screenshots/ios/iphone/06-settings.png"
+      ],
+      "iPad": [
+        "screenshots/ios/ipad/01-dashboard-landscape.png",
+        "screenshots/ios/ipad/02-alerts-split-view.png",
+        "screenshots/ios/ipad/03-analytics-full.png"
+      ]
+    },
+    "android": {
+      "phone": [
+        "screenshots/android/phone/01-dashboard.png",
+        "screenshots/android/phone/02-alerts.png",
+        "screenshots/android/phone/03-alert-details.png",
+        "screenshots/android/phone/04-voice-commands.png",
+        "screenshots/android/phone/05-analytics.png",
+        "screenshots/android/phone/06-settings.png"
+      ],
+      "tablet": [
+        "screenshots/android/tablet/01-dashboard-landscape.png",
+        "screenshots/android/tablet/02-alerts-split-view.png",
+        "screenshots/android/tablet/03-analytics-full.png"
+      ]
+    }
+  },
+  "appIcons": {
+    "ios": {
+      "1024x1024": "icons/ios/AppIcon-1024.png",
+      "180x180": "icons/ios/AppIcon-180.png",
+      "167x167": "icons/ios/AppIcon-167.png",
+      "152x152": "icons/ios/AppIcon-152.png",
+      "120x120": "icons/ios/AppIcon-120.png",
+      "87x87": "icons/ios/AppIcon-87.png",
+      "80x80": "icons/ios/AppIcon-80.png",
+      "76x76": "icons/ios/AppIcon-76.png",
+      "60x60": "icons/ios/AppIcon-60.png",
+      "58x58": "icons/ios/AppIcon-58.png",
+      "40x40": "icons/ios/AppIcon-40.png",
+      "29x29": "icons/ios/AppIcon-29.png",
+      "20x20": "icons/ios/AppIcon-20.png"
+    },
+    "android": {
+      "512x512": "icons/android/ic_launcher-512.png",
+      "192x192": "icons/android/ic_launcher-192.png",
+      "144x144": "icons/android/ic_launcher-144.png",
+      "96x96": "icons/android/ic_launcher-96.png",
+      "72x72": "icons/android/ic_launcher-72.png",
+      "48x48": "icons/android/ic_launcher-48.png",
+      "36x36": "icons/android/ic_launcher-36.png"
+    }
+  },
+  "releaseNotes": {
+    "1.0.0": {
+      "date": "2024-01-15",
+      "features": [
+        "Initial release of SAMS Monitor",
+        "Real-time server monitoring dashboard",
+        "Advanced alert management system",
+        "Voice command integration",
+        "Biometric authentication",
+        "Dark mode support",
+        "Comprehensive analytics and reporting",
+        "Offline functionality",
+        "Multi-language support",
+        "Enterprise-grade security features"
+      ],
+      "improvements": [],
+      "bugFixes": []
+    }
+  },
+  "testingInfo": {
+    "betaTestingGroups": [
+      "Internal QA Team",
+      "Partner Organizations",
+      "Early Access Users",
+      "Enterprise Customers"
+    ],
+    "testFlightGroups": [
+      {
+        "name": "Internal Testing",
+        "description": "SAMS development team and QA",
+        "maxTesters": 25
+      },
+      {
+        "name": "Partner Beta",
+        "description": "Trusted partner organizations",
+        "maxTesters": 100
+      },
+      {
+        "name": "Public Beta",
+        "description": "Public beta testing program",
+        "maxTesters": 1000
+      }
+    ],
+    "googlePlayTesting": [
+      {
+        "track": "internal",
+        "description": "Internal team testing",
+        "maxTesters": 100
+      },
+      {
+        "track": "alpha",
+        "description": "Closed alpha testing",
+        "maxTesters": 500
+      },
+      {
+        "track": "beta",
+        "description": "Open beta testing",
+        "maxTesters": 5000
+      }
+    ]
+  },
+  "compliance": {
+    "dataPrivacy": {
+      "gdprCompliant": true,
+      "ccpaCompliant": true,
+      "dataRetentionPeriod": "2 years",
+      "dataProcessingPurpose": "Application functionality and user experience improvement"
+    },
+    "security": {
+      "encryptionAtRest": true,
+      "encryptionInTransit": true,
+      "biometricDataStorage": "device-only",
+      "authenticationMethods": ["PIN", "Biometric", "SSO"]
+    },
+    "accessibility": {
+      "wcagLevel": "AA",
+      "screenReaderSupport": true,
+      "voiceOverSupport": true,
+      "highContrastSupport": true,
+      "fontScalingSupport": true
+    }
+  }
+}

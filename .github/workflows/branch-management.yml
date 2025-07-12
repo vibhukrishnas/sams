@@ -1,0 +1,315 @@
+name: Branch Management
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Branch management action'
+        required: true
+        default: 'sync'
+        type: choice
+        options:
+        - sync
+        - cleanup
+        - create-feature-branches
+
+jobs:
+  sync-branches:
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'sync')
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Configure Git
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+    
+    - name: Sync main to develop
+      if: github.ref == 'refs/heads/main'
+      run: |
+        git checkout develop
+        git merge origin/main --no-ff -m "chore: sync main to develop"
+        git push origin develop
+    
+    - name: Update feature branches
+      if: github.ref == 'refs/heads/develop'
+      run: |
+        # Get all feature branches
+        git branch -r | grep 'origin/feature/' | sed 's/origin\///' | while read branch; do
+          echo "Updating $branch"
+          git checkout $branch || continue
+          git merge origin/develop --no-ff -m "chore: sync develop to $branch" || {
+            echo "Merge conflict in $branch - manual resolution required"
+            git merge --abort
+            continue
+          }
+          git push origin $branch || echo "Failed to push $branch"
+        done
+
+  cleanup-merged-branches:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'cleanup'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Delete merged feature branches
+      run: |
+        # Get merged branches
+        git branch -r --merged origin/develop | grep 'origin/feature/' | sed 's/origin\///' | while read branch; do
+          echo "Deleting merged branch: $branch"
+          git push origin --delete $branch || echo "Failed to delete $branch"
+        done
+    
+    - name: Delete stale branches
+      run: |
+        # Delete branches with no commits in last 90 days
+        cutoff_date=$(date -d '90 days ago' +%Y-%m-%d)
+        git for-each-ref --format='%(refname:short) %(committerdate:short)' refs/remotes/origin/feature/ | while read branch date; do
+          if [[ "$date" < "$cutoff_date" ]]; then
+            branch_name=${branch#origin/}
+            echo "Deleting stale branch: $branch_name (last commit: $date)"
+            git push origin --delete $branch_name || echo "Failed to delete $branch_name"
+          fi
+        done
+
+  create-feature-branches:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'create-feature-branches'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Configure Git
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+    
+    - name: Create feature branches
+      run: |
+        # Ensure we're on develop
+        git checkout develop
+        git pull origin develop
+        
+        # Array of feature branches to create
+        branches=(
+          "feature/backend-api"
+          "feature/database-schema"
+          "feature/authentication-system"
+          "feature/websocket-realtime"
+          "feature/monitoring-agents"
+          "feature/push-notifications"
+          "feature/alert-management"
+          "feature/report-generation"
+          "feature/mobile-app-core"
+          "feature/mobile-dashboard"
+          "feature/mobile-alerts"
+          "feature/mobile-server-management"
+          "feature/mobile-reports"
+          "feature/mobile-authentication"
+          "feature/docker-deployment"
+          "feature/monitoring-stack"
+          "feature/testing-framework"
+          "feature/security-middleware"
+          "feature/api-documentation"
+          "feature/performance-optimization"
+          "feature/logging-system"
+          "feature/backup-recovery"
+          "feature/load-balancing"
+          "feature/ssl-configuration"
+          "feature/ci-cd-pipeline"
+          "feature/health-checks"
+          "feature/metrics-collection"
+          "feature/dashboard-visualization"
+          "feature/incident-management"
+          "feature/notification-routing"
+          "feature/user-management"
+          "feature/role-based-access"
+          "feature/audit-logging"
+          "feature/data-retention"
+          "feature/api-rate-limiting"
+          "feature/error-handling"
+          "feature/configuration-management"
+          "feature/service-discovery"
+          "feature/cache-optimization"
+          "feature/database-optimization"
+        )
+        
+        # Create each branch if it doesn't exist
+        for branch in "${branches[@]}"; do
+          if git show-ref --verify --quiet refs/remotes/origin/$branch; then
+            echo "Branch $branch already exists"
+          else
+            echo "Creating branch: $branch"
+            git checkout -b $branch develop
+            git push -u origin $branch
+            git checkout develop
+          fi
+        done
+
+  validate-branch-naming:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Validate branch name
+      run: |
+        branch_name="${{ github.head_ref }}"
+        
+        # Valid branch patterns
+        if [[ $branch_name =~ ^(feature|bugfix|hotfix|release)\/[a-z0-9-]+$ ]]; then
+          echo "✅ Branch name '$branch_name' follows naming convention"
+        else
+          echo "❌ Branch name '$branch_name' does not follow naming convention"
+          echo "Valid patterns:"
+          echo "  - feature/your-feature-name"
+          echo "  - bugfix/issue-description"
+          echo "  - hotfix/critical-fix"
+          echo "  - release/v1.0.0"
+          exit 1
+        fi
+
+  auto-assign-reviewers:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.action == 'opened'
+    
+    steps:
+    - name: Auto-assign reviewers
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo, number } = context.issue;
+          const branch = context.payload.pull_request.head.ref;
+          
+          // Define reviewers based on branch type
+          let reviewers = [];
+          
+          if (branch.startsWith('feature/backend-') || branch.startsWith('feature/api-')) {
+            reviewers = ['backend-team-lead', 'senior-backend-dev'];
+          } else if (branch.startsWith('feature/mobile-')) {
+            reviewers = ['mobile-team-lead', 'senior-mobile-dev'];
+          } else if (branch.startsWith('feature/docker-') || branch.startsWith('feature/ci-cd-')) {
+            reviewers = ['devops-team-lead', 'infrastructure-engineer'];
+          } else if (branch.startsWith('hotfix/')) {
+            reviewers = ['tech-lead', 'senior-engineer'];
+          } else {
+            reviewers = ['tech-lead'];
+          }
+          
+          // Request reviews
+          if (reviewers.length > 0) {
+            await github.rest.pulls.requestReviewers({
+              owner,
+              repo,
+              pull_number: number,
+              reviewers: reviewers
+            });
+          }
+
+  auto-label-prs:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.action == 'opened'
+    
+    steps:
+    - name: Auto-label PRs
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo, number } = context.issue;
+          const branch = context.payload.pull_request.head.ref;
+          const title = context.payload.pull_request.title;
+          
+          let labels = [];
+          
+          // Label based on branch type
+          if (branch.startsWith('feature/backend-')) {
+            labels.push('backend', 'feature');
+          } else if (branch.startsWith('feature/mobile-')) {
+            labels.push('mobile', 'feature');
+          } else if (branch.startsWith('feature/docker-') || branch.startsWith('feature/ci-cd-')) {
+            labels.push('infrastructure', 'feature');
+          } else if (branch.startsWith('bugfix/')) {
+            labels.push('bug', 'bugfix');
+          } else if (branch.startsWith('hotfix/')) {
+            labels.push('hotfix', 'critical');
+          } else if (branch.startsWith('release/')) {
+            labels.push('release');
+          }
+          
+          // Label based on title keywords
+          if (title.toLowerCase().includes('security')) {
+            labels.push('security');
+          }
+          if (title.toLowerCase().includes('performance')) {
+            labels.push('performance');
+          }
+          if (title.toLowerCase().includes('documentation') || title.toLowerCase().includes('docs')) {
+            labels.push('documentation');
+          }
+          
+          // Apply labels
+          if (labels.length > 0) {
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: number,
+              labels: labels
+            });
+          }
+
+  branch-protection-check:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    steps:
+    - name: Check branch protection
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const branch = context.ref.replace('refs/heads/', '');
+          
+          // Check if branch protection is enabled for important branches
+          const protectedBranches = ['main', 'develop', 'staging'];
+          
+          if (protectedBranches.includes(branch)) {
+            try {
+              const protection = await github.rest.repos.getBranchProtection({
+                owner,
+                repo,
+                branch
+              });
+              
+              console.log(`✅ Branch protection is enabled for ${branch}`);
+            } catch (error) {
+              if (error.status === 404) {
+                console.log(`❌ Branch protection is NOT enabled for ${branch}`);
+                // Create an issue to remind about branch protection
+                await github.rest.issues.create({
+                  owner,
+                  repo,
+                  title: `Branch protection missing for ${branch}`,
+                  body: `The ${branch} branch does not have protection rules enabled. Please enable branch protection to ensure code quality and security.`,
+                  labels: ['infrastructure', 'security']
+                });
+              }
+            }
+          }
