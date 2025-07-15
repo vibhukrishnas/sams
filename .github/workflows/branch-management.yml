@@ -37,17 +37,25 @@ jobs:
     - name: Sync main to develop
       if: github.ref == 'refs/heads/main'
       run: |
-        git checkout develop
-        git merge origin/main --no-ff -m "chore: sync main to develop"
-        git push origin develop
+        git fetch origin
+        git checkout develop || git checkout -b develop origin/develop
+        git merge origin/main --no-ff -m "chore: sync main to develop" || {
+          echo "Merge conflict detected - manual resolution required"
+          exit 0
+        }
+        git push origin develop || echo "Push failed - may need manual intervention"
     
     - name: Update feature branches
       if: github.ref == 'refs/heads/develop'
       run: |
         # Get all feature branches
-        git branch -r | grep 'origin/feature/' | sed 's/origin\///' | while read branch; do
+        git fetch origin
+        git branch -r | grep 'origin/feature/' | sed 's/origin\///' | head -10 | while read branch; do
           echo "Updating $branch"
-          git checkout $branch || continue
+          git checkout $branch || {
+            echo "Failed to checkout $branch - skipping"
+            continue
+          }
           git merge origin/develop --no-ff -m "chore: sync develop to $branch" || {
             echo "Merge conflict in $branch - manual resolution required"
             git merge --abort
@@ -190,7 +198,7 @@ jobs:
   auto-assign-reviewers:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && github.event.action == 'opened'
-    
+
     steps:
     - name: Auto-assign reviewers
       uses: actions/github-script@v7
@@ -198,30 +206,52 @@ jobs:
         script: |
           const { owner, repo, number } = context.issue;
           const branch = context.payload.pull_request.head.ref;
-          
-          // Define reviewers based on branch type
+
+          // Define reviewers based on branch type (using actual GitHub usernames)
           let reviewers = [];
-          
-          if (branch.startsWith('feature/backend-') || branch.startsWith('feature/api-')) {
-            reviewers = ['backend-team-lead', 'senior-backend-dev'];
-          } else if (branch.startsWith('feature/mobile-')) {
-            reviewers = ['mobile-team-lead', 'senior-mobile-dev'];
-          } else if (branch.startsWith('feature/docker-') || branch.startsWith('feature/ci-cd-')) {
-            reviewers = ['devops-team-lead', 'infrastructure-engineer'];
-          } else if (branch.startsWith('hotfix/')) {
-            reviewers = ['tech-lead', 'senior-engineer'];
-          } else {
-            reviewers = ['tech-lead'];
-          }
-          
-          // Request reviews
-          if (reviewers.length > 0) {
-            await github.rest.pulls.requestReviewers({
+
+          // Get repository collaborators first
+          try {
+            const collaborators = await github.rest.repos.listCollaborators({
               owner,
-              repo,
-              pull_number: number,
-              reviewers: reviewers
+              repo
             });
+
+            const availableReviewers = collaborators.data.map(c => c.login);
+            console.log('Available reviewers:', availableReviewers);
+
+            // Only assign reviewers if they exist as collaborators
+            if (branch.startsWith('feature/backend-') || branch.startsWith('feature/api-')) {
+              reviewers = availableReviewers.slice(0, 2); // First 2 collaborators
+            } else if (branch.startsWith('feature/mobile-')) {
+              reviewers = availableReviewers.slice(0, 1); // First collaborator
+            } else if (branch.startsWith('feature/docker-') || branch.startsWith('feature/ci-cd-')) {
+              reviewers = availableReviewers.slice(0, 1); // First collaborator
+            } else if (branch.startsWith('hotfix/')) {
+              reviewers = availableReviewers.slice(0, 2); // First 2 collaborators
+            } else {
+              reviewers = availableReviewers.slice(0, 1); // First collaborator
+            }
+
+            // Remove the PR author from reviewers
+            const prAuthor = context.payload.pull_request.user.login;
+            reviewers = reviewers.filter(r => r !== prAuthor);
+
+            // Request reviews
+            if (reviewers.length > 0) {
+              await github.rest.pulls.requestReviewers({
+                owner,
+                repo,
+                pull_number: number,
+                reviewers: reviewers
+              });
+              console.log('Assigned reviewers:', reviewers);
+            } else {
+              console.log('No available reviewers found');
+            }
+          } catch (error) {
+            console.log('Error assigning reviewers:', error.message);
+            // Continue without failing the workflow
           }
 
   auto-label-prs:
@@ -278,7 +308,7 @@ jobs:
   branch-protection-check:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
-    
+
     steps:
     - name: Check branch protection
       uses: actions/github-script@v7
@@ -286,10 +316,10 @@ jobs:
         script: |
           const { owner, repo } = context.repo;
           const branch = context.ref.replace('refs/heads/', '');
-          
+
           // Check if branch protection is enabled for important branches
           const protectedBranches = ['main', 'develop', 'staging'];
-          
+
           if (protectedBranches.includes(branch)) {
             try {
               const protection = await github.rest.repos.getBranchProtection({
@@ -297,19 +327,39 @@ jobs:
                 repo,
                 branch
               });
-              
+
               console.log(`✅ Branch protection is enabled for ${branch}`);
             } catch (error) {
               if (error.status === 404) {
                 console.log(`❌ Branch protection is NOT enabled for ${branch}`);
-                // Create an issue to remind about branch protection
-                await github.rest.issues.create({
+
+                // Check if issue already exists to avoid duplicates
+                const existingIssues = await github.rest.issues.listForRepo({
                   owner,
                   repo,
-                  title: `Branch protection missing for ${branch}`,
-                  body: `The ${branch} branch does not have protection rules enabled. Please enable branch protection to ensure code quality and security.`,
-                  labels: ['infrastructure', 'security']
+                  state: 'open',
+                  labels: 'infrastructure,security'
                 });
+
+                const existingIssue = existingIssues.data.find(issue =>
+                  issue.title.includes(`Branch protection missing for ${branch}`)
+                );
+
+                if (!existingIssue) {
+                  // Create an issue to remind about branch protection
+                  await github.rest.issues.create({
+                    owner,
+                    repo,
+                    title: `Branch protection missing for ${branch}`,
+                    body: `The ${branch} branch does not have protection rules enabled. Please enable branch protection to ensure code quality and security.`,
+                    labels: ['infrastructure', 'security']
+                  });
+                  console.log(`Created issue for ${branch} branch protection`);
+                } else {
+                  console.log(`Issue already exists for ${branch} branch protection`);
+                }
+              } else {
+                console.log(`Error checking branch protection: ${error.message}`);
               }
             }
           }

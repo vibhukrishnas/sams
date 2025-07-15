@@ -695,6 +695,7 @@ const AlertsScreen: React.FC = () => {
             </QuickActions>
           ))}
         </ScrollView>
+        )}
 
         {activeTab === 'rules' && (
           <ScrollView style={styles.scrollView}>

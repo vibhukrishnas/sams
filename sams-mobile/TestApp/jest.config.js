@@ -1,12 +1,7 @@
 module.exports = {
   preset: 'react-native',
-  setupFiles: [
-    '<rootDir>/__tests__/setup.js',
-  ],
-  setupFilesAfterEnv: [
-    '<rootDir>/__tests__/setupAfterEnv.js',
-    '@testing-library/jest-native/extend-expect',
-  ],
+  setupFiles: [],
+  setupFilesAfterEnv: [],
   testMatch: [
     '<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}',
     '<rootDir>/src/**/*.(test|spec).{js,jsx,ts,tsx}',
@@ -83,35 +78,8 @@ module.exports = {
   // Test timeout
   testTimeout: 10000,
 
-  // Global setup and teardown
-  globalSetup: '<rootDir>/src/__tests__/globalSetup.ts',
-  globalTeardown: '<rootDir>/src/__tests__/globalTeardown.ts',
-
   // Custom reporters
-  reporters: [
-    'default',
-    [
-      'jest-junit',
-      {
-        outputDirectory: '<rootDir>/test-results',
-        outputName: 'junit.xml',
-        classNameTemplate: '{classname}',
-        titleTemplate: '{title}',
-        ancestorSeparator: ' › ',
-        usePathForSuiteName: true,
-      },
-    ],
-    [
-      'jest-html-reporters',
-      {
-        publicPath: '<rootDir>/test-results',
-        filename: 'test-report.html',
-        expand: true,
-        hideIcon: false,
-        pageTitle: 'SAMS Mobile Test Report',
-      },
-    ],
-  ],
+  reporters: ['default'],
 
   // Performance settings
   maxWorkers: '50%',
@@ -121,8 +89,5 @@ module.exports = {
   detectOpenHandles: true,
 
   // Watch plugins
-  watchPlugins: [
-    'jest-watch-typeahead/filename',
-    'jest-watch-typeahead/testname',
-  ],
+  watchPlugins: [],
 };

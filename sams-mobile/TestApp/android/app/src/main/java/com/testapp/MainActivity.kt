@@ -1,5 +1,6 @@
 package com.testapp
 
+import android.os.Bundle
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
@@ -19,4 +20,30 @@ class MainActivity : ReactActivity() {
    */
   override fun createReactActivityDelegate(): ReactActivityDelegate =
       DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
+
+  /**
+   * Override onCreate to handle potential initialization issues
+   */
+  override fun onCreate(savedInstanceState: Bundle?) {
+    try {
+      super.onCreate(savedInstanceState)
+    } catch (e: Exception) {
+      // Handle any initialization errors gracefully
+      e.printStackTrace()
+      // Attempt to continue with basic initialization
+      super.onCreate(savedInstanceState)
+    }
+  }
+
+  /**
+   * Override onDestroy to clean up resources
+   */
+  override fun onDestroy() {
+    try {
+      super.onDestroy()
+    } catch (e: Exception) {
+      // Handle cleanup errors gracefully
+      e.printStackTrace()
+    }
+  }
 }

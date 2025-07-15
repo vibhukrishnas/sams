@@ -113,7 +113,7 @@ const ReportsScreen: React.FC = () => {
     }
   };
 
-  const [storedQueries, setStoredQueries] = useState<StoredQuery[]>([]);
+  const [storedQueries, setStoredQueries] = useState<StoredQuery[]>([
     {
       id: '1',
       name: 'High CPU Usage Servers',

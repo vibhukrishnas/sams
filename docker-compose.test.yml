@@ -1,0 +1,152 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database for Testing
+  postgres-test:
+    image: postgres:15-alpine
+    container_name: sams-postgres-test
+    environment:
+      POSTGRES_DB: sams_test
+      POSTGRES_USER: sams_test
+      POSTGRES_PASSWORD: sams_test_password
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+      - ./sams-backend/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sams_test -d sams_test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sams-test-network
+
+  # Redis Cache for Testing
+  redis-test:
+    image: redis:7-alpine
+    container_name: sams-redis-test
+    ports:
+      - "6380:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_test_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sams-test-network
+
+  # SAMS Backend API for Testing
+  sams-backend-test:
+    build:
+      context: ./sams-backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: sams-backend-test
+    environment:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://sams_test:sams_test_password@postgres-test:5432/sams_test
+      REDIS_URL: redis://redis-test:6379
+      JWT_SECRET: test_jwt_secret_key_for_testing_only
+      API_PORT: 3001
+      CORS_ORIGIN: http://localhost:3000
+      LOG_LEVEL: debug
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    volumes:
+      - ./sams-backend:/app
+      - /app/node_modules
+    command: npm run start:test
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - sams-test-network
+
+  # SAMS Frontend for Testing
+  sams-frontend-test:
+    build:
+      context: ./sams-frontend-testing
+      dockerfile: Dockerfile
+      target: development
+    container_name: sams-frontend-test
+    environment:
+      NODE_ENV: test
+      REACT_APP_API_URL: http://sams-backend-test:3001
+      REACT_APP_WEBSOCKET_URL: ws://sams-backend-test:3001
+      REACT_APP_VERSION: test
+      CHOKIDAR_USEPOLLING: true
+    ports:
+      - "3000:3000"
+    depends_on:
+      sams-backend-test:
+        condition: service_healthy
+    volumes:
+      - ./sams-frontend-testing:/app
+      - /app/node_modules
+    command: npm start
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - sams-test-network
+
+  # Nginx for Load Balancing (Testing)
+  nginx-test:
+    image: nginx:alpine
+    container_name: sams-nginx-test
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/test.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - sams-backend-test
+      - sams-frontend-test
+    networks:
+      - sams-test-network
+
+  # Test Database Seeder
+  db-seeder-test:
+    build:
+      context: ./sams-backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: sams-db-seeder-test
+    environment:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://sams_test:sams_test_password@postgres-test:5432/sams_test
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    volumes:
+      - ./sams-backend:/app
+      - /app/node_modules
+    command: npm run db:seed:test
+    networks:
+      - sams-test-network
+
+volumes:
+  postgres_test_data:
+    driver: local
+  redis_test_data:
+    driver: local
+
+networks:
+  sams-test-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

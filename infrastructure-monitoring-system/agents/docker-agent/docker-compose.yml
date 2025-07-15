@@ -1,0 +1,147 @@
+version: '3.8'
+
+services:
+  sams-docker-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sams-docker-agent
+    restart: unless-stopped
+    
+    # Mount Docker socket for container management
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./agent_config.json:/app/agent_config.json:ro
+      - ./logs:/app/logs
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    
+    # Network configuration
+    network_mode: host
+    
+    # Environment variables
+    environment:
+      - DOCKER_API_VERSION=1.41
+      - SAMS_SERVER_URL=${SAMS_SERVER_URL:-http://localhost:8080}
+      - SAMS_API_KEY=${SAMS_API_KEY:-}
+      - AGENT_ID=${AGENT_ID:-docker-agent-$(hostname)}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - METRICS_INTERVAL=${METRICS_INTERVAL:-30}
+      - ENABLE_CONTAINER_MANAGEMENT=${ENABLE_CONTAINER_MANAGEMENT:-true}
+      - ENABLE_HEALTH_CHECKS=${ENABLE_HEALTH_CHECKS:-true}
+      - ENABLE_AUTO_DEPLOYMENT=${ENABLE_AUTO_DEPLOYMENT:-false}
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "/app/docker-agent", "--health-check"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Labels for identification
+    labels:
+      - "com.sams.service=docker-agent"
+      - "com.sams.version=1.0.0"
+      - "com.sams.description=SAMS Docker Infrastructure Monitoring Agent"
+    
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+    
+    # User configuration (run as non-root when possible)
+    # user: "1000:1000"  # Uncomment and adjust if needed
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Optional: Prometheus metrics exporter
+  sams-docker-metrics-exporter:
+    image: prom/node-exporter:latest
+    container_name: sams-docker-metrics-exporter
+    restart: unless-stopped
+    
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      - '--web.listen-address=:9100'
+    
+    ports:
+      - "9100:9100"
+    
+    labels:
+      - "com.sams.service=metrics-exporter"
+      - "com.sams.component=docker-agent"
+    
+    profiles:
+      - monitoring
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 128M
+
+  # Optional: Log aggregator
+  sams-docker-log-aggregator:
+    image: fluent/fluent-bit:latest
+    container_name: sams-docker-log-aggregator
+    restart: unless-stopped
+    
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf:ro
+    
+    ports:
+      - "24224:24224"
+    
+    labels:
+      - "com.sams.service=log-aggregator"
+      - "com.sams.component=docker-agent"
+    
+    profiles:
+      - logging
+    
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 256M
+
+networks:
+  default:
+    name: sams-monitoring
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  agent-logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./logs
