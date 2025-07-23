@@ -1,3 +1,0 @@
-cd D:\Android\.android\tools\bin
-sdkmanager "system-images;android-30;google_apis;x86_64"
-avdmanager create avd --name "Pixel_API_30" --package "system-images;android-30;google_apis;x86_64" --device "pixel"

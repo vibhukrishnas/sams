@@ -1,0 +1,217 @@
+name: Blue-Green Deployment
+
+on:
+  push:
+    branches: [main, production]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy-blue:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'staging' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG }}
+
+      - name: Update Blue deployment image
+        run: |
+          kubectl set image deployment/sams-blue-deployment \
+            sams-container=${{ needs.build.outputs.image-tag }} \
+            -n sams-system
+
+      - name: Wait for Blue deployment rollout
+        run: |
+          kubectl rollout status deployment/sams-blue-deployment \
+            -n sams-system --timeout=300s
+
+      - name: Health check Blue deployment
+        run: |
+          kubectl wait --for=condition=available \
+            deployment/sams-blue-deployment \
+            -n sams-system --timeout=300s
+
+  test-blue:
+    needs: [build, deploy-blue]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG }}
+
+      - name: Get Blue service endpoint
+        id: endpoint
+        run: |
+          BLUE_IP=$(kubectl get svc sams-blue-service -n sams-system -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          echo "blue_endpoint=http://${BLUE_IP}" >> $GITHUB_OUTPUT
+
+      - name: Run E2E tests on Blue
+        run: |
+          # API Health Check
+          curl -f ${{ steps.endpoint.outputs.blue_endpoint }}/api/v1/health || exit 1
+          
+          # Backend Services Check
+          curl -f ${{ steps.endpoint.outputs.blue_endpoint }}:8001/health || exit 1
+          curl -f ${{ steps.endpoint.outputs.blue_endpoint }}:8003/health || exit 1
+          
+          # Database Connection Check
+          curl -f ${{ steps.endpoint.outputs.blue_endpoint }}/api/v1/servers || exit 1
+          
+          # Alert System Check
+          curl -f ${{ steps.endpoint.outputs.blue_endpoint }}/api/v1/alerts || exit 1
+
+      - name: Performance Test
+        run: |
+          # Install Apache Bench
+          sudo apt-get update && sudo apt-get install -y apache2-utils
+          
+          # Run performance test (100 requests, 10 concurrent)
+          ab -n 100 -c 10 ${{ steps.endpoint.outputs.blue_endpoint }}/api/v1/health
+          
+          # Check response time (should be < 100ms)
+          RESPONSE_TIME=$(curl -w "@scripts/curl-format.txt" -s ${{ steps.endpoint.outputs.blue_endpoint }}/api/v1/health)
+          echo "Response time: ${RESPONSE_TIME}ms"
+
+  switch-traffic:
+    needs: [test-blue]
+    runs-on: ubuntu-latest
+    environment: production-traffic-switch
+    steps:
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG }}
+
+      - name: Switch traffic to Blue
+        run: |
+          kubectl patch service sams-service \
+            -n sams-system \
+            -p '{"spec":{"selector":{"color":"blue"}}}'
+
+      - name: Verify traffic switch
+        run: |
+          kubectl get service sams-service -n sams-system -o yaml | grep -A5 selector
+
+      - name: Monitor post-switch metrics
+        run: |
+          sleep 60  # Wait for metrics collection
+          # Check error rates and response times
+          kubectl logs -l app=sams,color=blue -n sams-system --tail=50
+
+  cleanup-green:
+    needs: [switch-traffic]
+    runs-on: ubuntu-latest
+    if: success()
+    steps:
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG }}
+
+      - name: Scale down Green deployment
+        run: |
+          kubectl scale deployment sams-green-deployment \
+            --replicas=0 -n sams-system
+
+      - name: Wait before full cleanup
+        run: sleep 300  # 5 minutes grace period
+
+      - name: Full Green cleanup
+        run: |
+          kubectl delete deployment sams-green-deployment -n sams-system
+          kubectl delete service sams-green-service -n sams-system
+
+  rollback:
+    needs: [switch-traffic]
+    runs-on: ubuntu-latest
+    if: failure()
+    steps:
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBECONFIG }}
+
+      - name: Rollback to Green
+        run: |
+          kubectl patch service sams-service \
+            -n sams-system \
+            -p '{"spec":{"selector":{"color":"green"}}}'
+
+      - name: Scale up Green deployment
+        run: |
+          kubectl scale deployment sams-green-deployment \
+            --replicas=3 -n sams-system
+
+      - name: Notify team of rollback
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          text: "🚨 SAMS Blue-Green deployment failed. Rolled back to Green."
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAMS Mobile - Enhanced Real-Time UI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: #fff;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #2c3e50;
+            padding: 20px;
+            color: white;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #27ae60;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .content {
+            padding: 20px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-left: 4px solid #3498db;
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card.success {
+            border-left-color: #27ae60;
+        }
+        
+        .stat-card.danger {
+            border-left-color: #e74c3c;
+        }
+        
+        .stat-card.warning {
+            border-left-color: #f39c12;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value.success { color: #27ae60; }
+        .stat-value.danger { color: #e74c3c; }
+        .stat-value.warning { color: #f39c12; }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .metric-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .metric-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #27ae60;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+        
+        .progress-fill.success { background: #27ae60; }
+        .progress-fill.warning { background: #f39c12; }
+        .progress-fill.danger { background: #e74c3c; }
+        
+        .metric-detail {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 8px;
+        }
+        
+        .backend-selector {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+        
+        .backend-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .backend-btn.active {
+            background: #3498db;
+            color: white;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .live-badge {
+            background: #27ae60;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        
+        .refresh-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: #3498db;
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .refresh-btn:hover {
+            transform: scale(1.1);
+            background: #2980b9;
+        }
+        
+        .last-update {
+            text-align: center;
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 SAMS Mobile</h1>
+            <p>Enhanced Real-Time Monitoring</p>
+            <div class="status">
+                <div class="status-dot"></div>
+                <span id="backend-status">Connected to Python Backend</span>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="backend-selector">
+                <button class="backend-btn active" onclick="switchBackend('python')">PYTHON</button>
+                <button class="backend-btn" onclick="switchBackend('java')">JAVA</button>
+                <button class="backend-btn" onclick="switchBackend('nodejs')">NODE.JS</button>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card success">
+                    <div class="stat-value success" id="online-servers">3</div>
+                    <div class="stat-label">Online Servers</div>
+                </div>
+                <div class="stat-card danger">
+                    <div class="stat-value danger" id="critical-alerts">6</div>
+                    <div class="stat-label">Critical Alerts</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-value warning" id="total-alerts">11</div>
+                    <div class="stat-label">Total Alerts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total-servers">6</div>
+                    <div class="stat-label">Total Servers</div>
+                </div>
+            </div>
+            
+            <div class="section-title">
+                💻 Live System Metrics
+                <div class="live-badge">LIVE</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-title">🔥 CPU Usage</div>
+                    <div class="metric-value" id="cpu-value">45%</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill success" id="cpu-progress" style="width: 45%"></div>
+                </div>
+                <div class="metric-detail">8 cores | Load: 1.2, 1.1, 0.9</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-title">💾 Memory Usage</div>
+                    <div class="metric-value" id="memory-value">67%</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill warning" id="memory-progress" style="width: 67%"></div>
+                </div>
+                <div class="metric-detail">Used: 10.7 GB / 16.0 GB</div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-title">💿 Disk Usage</div>
+                    <div class="metric-value" id="disk-value">78%</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill warning" id="disk-progress" style="width: 78%"></div>
+                </div>
+                <div class="metric-detail">Free: 115.2 GB / 512.0 GB</div>
+            </div>
+            
+            <div class="last-update">
+                ⏰ Last Update: <span id="last-update">Just now</span>
+            </div>
+        </div>
+    </div>
+    
+    <button class="refresh-btn" onclick="refreshData()">🔄</button>
+    
+    <script>
+        let currentBackend = 'python';
+        const backends = {
+            python: 'http://localhost:5000/api',
+            java: 'http://localhost:5002/api',
+            nodejs: 'http://localhost:5003/api'
+        };
+        
+        function switchBackend(backend) {
+            currentBackend = backend;
+            document.querySelectorAll('.backend-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('backend-status').textContent = `Connected to ${backend.toUpperCase()} Backend`;
+            refreshData();
+        }
+        
+        async function refreshData() {
+            try {
+                // Simulate API call to current backend
+                const response = await fetch(`${backends[currentBackend]}/dashboard`);
+                if (response.ok) {
+                    const data = await response.json();
+                    updateUI(data);
+                } else {
+                    console.log('Using simulated data');
+                    updateUIWithSimulatedData();
+                }
+            } catch (error) {
+                console.log('Using simulated data due to:', error);
+                updateUIWithSimulatedData();
+            }
+            
+            document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+        }
+        
+        function updateUI(data) {
+            if (data.stats) {
+                document.getElementById('online-servers').textContent = data.stats.online_servers || 3;
+                document.getElementById('critical-alerts').textContent = data.stats.critical_alerts || 6;
+                document.getElementById('total-alerts').textContent = data.stats.total_alerts || 11;
+                document.getElementById('total-servers').textContent = data.stats.total_servers || 6;
+            }
+        }
+        
+        function updateUIWithSimulatedData() {
+            // Simulate real-time data changes
+            const cpu = Math.floor(Math.random() * 30) + 20;
+            const memory = Math.floor(Math.random() * 20) + 60;
+            const disk = Math.floor(Math.random() * 15) + 70;
+            
+            document.getElementById('cpu-value').textContent = cpu + '%';
+            document.getElementById('cpu-progress').style.width = cpu + '%';
+            document.getElementById('cpu-progress').className = `progress-fill ${cpu > 80 ? 'danger' : cpu > 60 ? 'warning' : 'success'}`;
+            
+            document.getElementById('memory-value').textContent = memory + '%';
+            document.getElementById('memory-progress').style.width = memory + '%';
+            document.getElementById('memory-progress').className = `progress-fill ${memory > 85 ? 'danger' : memory > 70 ? 'warning' : 'success'}`;
+            
+            document.getElementById('disk-value').textContent = disk + '%';
+            document.getElementById('disk-progress').style.width = disk + '%';
+            document.getElementById('disk-progress').className = `progress-fill ${disk > 90 ? 'danger' : disk > 75 ? 'warning' : 'success'}`;
+        }
+        
+        // Auto-refresh every 5 seconds
+        setInterval(refreshData, 5000);
+        
+        // Initial load
+        refreshData();
+    </script>
+</body>
+</html>

@@ -46,29 +46,27 @@ jobs:
 
     - name: Run linting
       working-directory: sams-mobile/TestApp
-      run: npm run lint || echo "Linting completed with warnings"
+      run: npm run lint
 
     - name: Run unit tests
       working-directory: sams-mobile/TestApp
-      run: npm run test:coverage || echo "Tests completed"
+      run: npm run test:coverage
 
     - name: Run performance tests
       working-directory: sams-mobile/TestApp
-      run: npm run test:performance || echo "Performance tests completed"
+      run: npm run test:performance
 
     - name: Test WebSocket Mobile Features
       working-directory: sams-mobile/TestApp
       run: |
         echo "Testing mobile WebSocket realtime communication..."
-        npm test -- --testNamePattern="WebSocket|realtime|socket" --passWithNoTests || echo "Mobile WebSocket tests completed"
-      continue-on-error: true
+        npm test -- --testNamePattern="WebSocket|realtime|socket"
 
     - name: Test Enhanced Mobile Features
       working-directory: sams-mobile/TestApp
       run: |
         echo "Testing enhanced mobile SAMS features..."
-        npm test -- --testNamePattern="enhanced|complete|advanced" --passWithNoTests || echo "Enhanced mobile tests completed"
-      continue-on-error: true
+        npm test -- --testNamePattern="enhanced|complete|advanced"
       
     - name: Upload test results
       uses: actions/upload-artifact@v4

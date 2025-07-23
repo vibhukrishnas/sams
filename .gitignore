@@ -9,6 +9,8 @@ yarn-error.log*
 .expo-shared/
 dist/
 web-build/
+.android/
+.gradle/
 
 # IDE
 .vscode/
@@ -18,6 +20,47 @@ web-build/
 
 # OS
 .DS_Store
+
+# Build files
+*.log
+*.tmp
+*.temp
+
+# Batch and script files
+*.bat
+*.ps1
+
+# Database files
+*.db
+*.sqlite
+
+# Backup and temporary directories
+backups/
+temp/
+tmp/
+__pycache__/
+
+# Documentation clutter
+*_SUMMARY.md
+*_COMPLETE.md
+*_FIXES.md
+WEEK*.md
+BRUTAL*.md
+EMERGENCY*.md
+FINAL*.md
+URGENT*.md
+IMPLEMENTATION*.md
+
+# Virtual environments
+.venv/
+.env/
+venv/
+env/
+
+# Android specific
+.android/
+avd/
+AndroidSDK/
 Thumbs.db
 
 # Logs

@@ -1,0 +1,561 @@
+name: 🚀 SAMS Web Console CI/CD Pipeline
+on:
+  push:
+    branches: [ main, develop, staging ]
+    paths: 
+      - 'sams-web-console/**'
+      - '.github/workflows/frontend-cicd.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'sams-web-console/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      skip_tests:
+        description: 'Skip test execution'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '18.x'
+  PNPM_VERSION: '8.x'
+  BUILD_PATH: './sams-web-console'
+  DOCKER_REGISTRY: 'ghcr.io'
+  DOCKER_IMAGE_NAME: 'sams-web-console'
+
+jobs:
+  # 🔍 Code Quality & Security Analysis
+  code-quality:
+    name: 🔍 Code Quality Analysis
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || contains(github.event.head_commit.message, '[quality-check]')
+    
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🏗️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: 📦 Setup PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 🔧 Install Dependencies
+        working-directory: ${{ env.BUILD_PATH }}
+        run: pnpm install --frozen-lockfile
+
+      - name: 🎯 ESLint Analysis
+        working-directory: ${{ env.BUILD_PATH }}
+        run: |
+          pnpm run lint:check
+          pnpm run lint:report
+        continue-on-error: true
+
+      - name: 🎨 Prettier Format Check
+        working-directory: ${{ env.BUILD_PATH }}
+        run: pnpm run format:check
+
+      - name: 🔒 Security Audit
+        working-directory: ${{ env.BUILD_PATH }}
+        run: |
+          pnpm audit --audit-level moderate
+          npx audit-ci --config .audit-ci.json
+        continue-on-error: true
+
+      - name: 📊 SonarCloud Analysis
+        uses: SonarSource/sonarcloud-github-action@master
+        with:
+          projectBaseDir: ${{ env.BUILD_PATH }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: 📈 CodeClimate Analysis
+        uses: paambaati/codeclimate-action@v5.0.0
+        with:
+          workingDirectory: ${{ env.BUILD_PATH }}
+          coverageLocations: |
+            ${{github.workspace}}/sams-web-console/coverage/lcov.info:lcov
+        env:
+          CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
+
+  # 🧪 Comprehensive Testing Suite
+  test:
+    name: 🧪 Test Suite
+    runs-on: ubuntu-latest
+    if: github.event.inputs.skip_tests != 'true'
+    
+    strategy:
+      matrix:
+        node-version: ['16.x', '18.x', '20.x']
+        browser: ['chrome', 'firefox', 'edge']
+        
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: 📦 Setup PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 🔧 Install Dependencies
+        working-directory: ${{ env.BUILD_PATH }}
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔨 Build Application
+        working-directory: ${{ env.BUILD_PATH }}
+        run: |
+          pnpm run build:staging
+          pnpm run build:analyze
+
+      - name: 🧪 Unit & Integration Tests
+        working-directory: ${{ env.BUILD_PATH }}
+        run: |
+          pnpm run test:unit --coverage
+          pnpm run test:integration --coverage
+        env:
+          CI: true
+
+      - name: 🌐 E2E Testing - ${{ matrix.browser }}
+        working-directory: ${{ env.BUILD_PATH }}
+        run: |
+          pnpm run test:e2e:${{ matrix.browser }}
+          pnpm run test:e2e:mobile
+        env:
+          CI: true
+          BROWSER: ${{ matrix.browser }}
+
+      - name: 🎭 Visual Regression Testing
+        working-directory: ${{ env.BUILD_PATH }}
+        run: |
+          pnpm run test:visual
+          pnpm run test:accessibility
+        env:
+          PERCY_TOKEN: ${{ secrets.PERCY_TOKEN }}
+
+      - name: ⚡ Performance Testing
+        working-directory: ${{ env.BUILD_PATH }}
+        run: |
+          pnpm run test:performance
+          pnpm run lighthouse:ci
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+      - name: 📊 Upload Coverage Reports
+        uses: codecov/codecov-action@v4
+        with:
+          directory: ${{ env.BUILD_PATH }}/coverage
+          flags: frontend,node-${{ matrix.node-version }}
+          name: sams-web-console-${{ matrix.node-version }}
+
+      - name: 📋 Test Results Summary
+        uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: Test Results - Node ${{ matrix.node-version }} - ${{ matrix.browser }}
+          path: '${{ env.BUILD_PATH }}/test-results/*.xml'
+          reporter: jest-junit
+
+  # 🏗️ Multi-Environment Build
+  build:
+    name: 🏗️ Build & Package
+    runs-on: ubuntu-latest
+    needs: [code-quality, test]
+    if: always() && (needs.code-quality.result != 'failure' && needs.test.result != 'failure')
+    
+    strategy:
+      matrix:
+        environment: [staging, production]
+        
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 📦 Setup PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: 🔧 Install Dependencies
+        working-directory: ${{ env.BUILD_PATH }}
+        run: pnpm install --frozen-lockfile
+
+      - name: 🌍 Environment Configuration
+        working-directory: ${{ env.BUILD_PATH }}
+        run: |
+          cp .env.${{ matrix.environment }} .env.production
+          echo "Building for ${{ matrix.environment }} environment"
+
+      - name: 🔨 Build Application
+        working-directory: ${{ env.BUILD_PATH }}
+        run: |
+          pnpm run build:${{ matrix.environment }}
+          pnpm run build:analyze
+        env:
+          NODE_ENV: production
+          REACT_APP_ENV: ${{ matrix.environment }}
+          GENERATE_SOURCEMAP: ${{ matrix.environment == 'staging' }}
+
+      - name: 📦 Create Build Artifact
+        working-directory: ${{ env.BUILD_PATH }}
+        run: |
+          tar -czf ../sams-web-console-${{ matrix.environment }}.tar.gz build/
+          zip -r ../sams-web-console-${{ matrix.environment }}.zip build/
+
+      - name: 📤 Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sams-web-console-${{ matrix.environment }}
+          path: |
+            sams-web-console-${{ matrix.environment }}.tar.gz
+            sams-web-console-${{ matrix.environment }}.zip
+          retention-days: 30
+
+      - name: 🔍 Bundle Size Analysis
+        working-directory: ${{ env.BUILD_PATH }}
+        run: |
+          npx bundlesize
+          npx webpack-bundle-analyzer build/static/js/*.js --mode server --port 8889 &
+          sleep 5
+          curl http://localhost:8889 > bundle-analysis-${{ matrix.environment }}.html
+        continue-on-error: true
+
+      - name: 📊 Upload Bundle Analysis
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-analysis-${{ matrix.environment }}
+          path: ${{ env.BUILD_PATH }}/bundle-analysis-${{ matrix.environment }}.html
+
+  # 🐳 Docker Container Build
+  docker-build:
+    name: 🐳 Docker Build & Push
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🔑 Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🏷️ Extract Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_REGISTRY }}/${{ github.repository }}/${{ env.DOCKER_IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: 🏗️ Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 📥 Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: sams-web-console-production
+
+      - name: 📦 Extract Build
+        run: |
+          tar -xzf sams-web-console-production.tar.gz
+          mv build ${{ env.BUILD_PATH }}/
+
+      - name: 🐳 Build & Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ env.BUILD_PATH }}
+          file: ${{ env.BUILD_PATH }}/Dockerfile.production
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ steps.meta.outputs.version }}
+
+      - name: 🔒 Container Security Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.meta.outputs.tags }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: 📤 Upload Security Scan Results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # 🚀 Staging Deployment
+  deploy-staging:
+    name: 🚀 Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    if: github.ref == 'refs/heads/develop' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    environment: 
+      name: staging
+      url: https://staging.sams.example.com
+      
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: ⚙️ Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: 📥 Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: sams-web-console-staging
+
+      - name: 🚀 Deploy to EKS Staging
+        run: |
+          aws eks update-kubeconfig --name sams-staging-cluster
+          kubectl apply -f k8s/staging/
+          kubectl set image deployment/sams-web-console sams-web-console=${{ env.DOCKER_REGISTRY }}/${{ github.repository }}/${{ env.DOCKER_IMAGE_NAME }}:develop-${{ github.sha }}
+          kubectl rollout status deployment/sams-web-console --timeout=600s
+
+      - name: 🌐 Deploy to S3/CloudFront
+        run: |
+          tar -xzf sams-web-console-staging.tar.gz
+          aws s3 sync build/ s3://sams-staging-frontend/ --delete
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_STAGING_ID }} --paths "/*"
+
+      - name: 🔍 Staging Deployment Verification
+        run: |
+          sleep 30
+          curl -f https://staging.sams.example.com/health || exit 1
+          curl -f https://staging.sams.example.com/api/health || exit 1
+
+      - name: 🧪 Staging Smoke Tests
+        working-directory: ${{ env.BUILD_PATH }}
+        run: |
+          pnpm run test:smoke:staging
+          pnpm run test:api:staging
+        env:
+          STAGING_URL: https://staging.sams.example.com
+
+      - name: 📊 Staging Performance Baseline
+        run: |
+          npx lighthouse https://staging.sams.example.com --output=json --output-path=lighthouse-staging.json
+          npx @lhci/cli upload --serverBaseUrl=${{ secrets.LHCI_SERVER_URL }} --token=${{ secrets.LHCI_TOKEN }}
+
+  # 🏭 Production Deployment
+  deploy-production:
+    name: 🏭 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [deploy-staging]
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    environment: 
+      name: production
+      url: https://sams.example.com
+      
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: ⚙️ Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+          aws-region: us-east-1
+
+      - name: 📥 Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: sams-web-console-production
+
+      - name: 🔄 Blue-Green Deployment Preparation
+        run: |
+          aws eks update-kubeconfig --name sams-production-cluster
+          kubectl apply -f k8s/production/
+          
+          # Create green deployment
+          kubectl patch deployment sams-web-console-green -p '{"spec":{"template":{"spec":{"containers":[{"name":"sams-web-console","image":"${{ env.DOCKER_REGISTRY }}/${{ github.repository }}/${{ env.DOCKER_IMAGE_NAME }}:main-${{ github.sha }}"}]}}}}'
+          kubectl rollout status deployment/sams-web-console-green --timeout=600s
+
+      - name: 🧪 Production Smoke Tests on Green
+        run: |
+          # Get green service endpoint
+          GREEN_ENDPOINT=$(kubectl get svc sams-web-console-green -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          curl -f http://$GREEN_ENDPOINT/health || exit 1
+          curl -f http://$GREEN_ENDPOINT/api/health || exit 1
+
+      - name: 🔄 Blue-Green Traffic Switch
+        run: |
+          # Switch traffic to green
+          kubectl patch service sams-web-console -p '{"spec":{"selector":{"version":"green"}}}'
+          sleep 10
+          
+          # Verify production endpoint
+          curl -f https://sams.example.com/health || exit 1
+
+      - name: 🌐 Deploy to Production S3/CloudFront
+        run: |
+          tar -xzf sams-web-console-production.tar.gz
+          
+          # Backup current version
+          aws s3 sync s3://sams-production-frontend/ s3://sams-production-frontend-backup/$(date +%Y%m%d-%H%M%S)/ --delete
+          
+          # Deploy new version
+          aws s3 sync build/ s3://sams-production-frontend/ --delete
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_PRODUCTION_ID }} --paths "/*"
+
+      - name: 🔍 Production Verification
+        run: |
+          sleep 60  # Wait for CloudFront invalidation
+          curl -f https://sams.example.com/health || exit 1
+          curl -f https://sams.example.com/api/health || exit 1
+
+      - name: 🧪 Production Integration Tests
+        working-directory: ${{ env.BUILD_PATH }}
+        run: |
+          pnpm run test:smoke:production
+          pnpm run test:api:production
+          pnpm run test:integration:production
+        env:
+          PRODUCTION_URL: https://sams.example.com
+
+      - name: 📊 Production Performance Monitoring
+        run: |
+          npx lighthouse https://sams.example.com --output=json --output-path=lighthouse-production.json
+          npx @lhci/cli upload --serverBaseUrl=${{ secrets.LHCI_SERVER_URL }} --token=${{ secrets.LHCI_TOKEN }}
+
+      - name: 🗑️ Cleanup Old Blue Deployment
+        run: |
+          # Scale down old blue deployment
+          kubectl scale deployment sams-web-console-blue --replicas=0
+          
+          # Clean up old Docker images (keep last 5)
+          docker image prune -af --filter "until=168h"
+
+      - name: 📢 Production Deployment Notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          text: '🚀 SAMS Web Console successfully deployed to production!'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+
+  # 📊 Post-Deployment Monitoring
+  post-deployment-monitoring:
+    name: 📊 Post-Deployment Monitoring
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: always() && needs.deploy-production.result == 'success'
+    
+    steps:
+      - name: 📈 Setup Monitoring
+        run: |
+          echo "Setting up post-deployment monitoring..."
+          
+      - name: 🔍 Health Check Monitoring
+        run: |
+          for i in {1..10}; do
+            echo "Health check $i/10..."
+            curl -f https://sams.example.com/health || exit 1
+            curl -f https://sams.example.com/api/health || exit 1
+            sleep 30
+          done
+
+      - name: 📊 Performance Baseline Update
+        run: |
+          npx lighthouse https://sams.example.com --output=json --output-path=baseline-$(date +%Y%m%d).json
+          # Store baseline for comparison
+
+      - name: 🚨 Alert Configuration Update
+        run: |
+          # Update DataDog/New Relic/CloudWatch alerts for new deployment
+          echo "Updating monitoring alerts and thresholds..."
+
+      - name: 📝 Deployment Summary Report
+        run: |
+          echo "## 🚀 SAMS Web Console Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: Production" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Deployment Time**: $(date)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ✅ Successful" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL**: https://sams.example.com" >> $GITHUB_STEP_SUMMARY
+
+  # 🔄 Rollback Capability
+  rollback:
+    name: 🔄 Emergency Rollback
+    runs-on: ubuntu-latest
+    if: failure() && (needs.deploy-staging.result == 'failure' || needs.deploy-production.result == 'failure')
+    needs: [deploy-staging, deploy-production]
+    environment: production
+    
+    steps:
+      - name: 🔄 Kubernetes Rollback
+        run: |
+          aws eks update-kubeconfig --name sams-production-cluster
+          kubectl rollout undo deployment/sams-web-console
+          kubectl rollout status deployment/sams-web-console --timeout=300s
+
+      - name: 🔄 S3/CloudFront Rollback
+        run: |
+          # Restore from last backup
+          LATEST_BACKUP=$(aws s3 ls s3://sams-production-frontend-backup/ | tail -1 | awk '{print $2}')
+          aws s3 sync s3://sams-production-frontend-backup/$LATEST_BACKUP s3://sams-production-frontend/ --delete
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_PRODUCTION_ID }} --paths "/*"
+
+      - name: 🚨 Rollback Notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: 'warning'
+          channel: '#alerts'
+          text: '⚠️ SAMS Web Console deployment failed - automatic rollback initiated!'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}

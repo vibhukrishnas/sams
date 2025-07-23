@@ -1,0 +1,119 @@
+{
+  "remote_servers": [
+    {
+      "id": 2,
+      "name": "Production Web Server",
+      "ip": "your-web-server.com",
+      "type": "http_api",
+      "port": 80,
+      "api_endpoint": "/health",
+      "protocol": "http",
+      "enabled": false,
+      "description": "Main production web server"
+    },
+    {
+      "id": 3,
+      "name": "Database Server",
+      "ip": "192.168.1.100",
+      "type": "ssh",
+      "port": 22,
+      "username": "admin",
+      "private_key_path": "/path/to/private/key",
+      "enabled": false,
+      "description": "Primary database server"
+    },
+    {
+      "id": 4,
+      "name": "API Gateway",
+      "ip": "api.yourcompany.com",
+      "type": "http_api",
+      "port": 443,
+      "api_endpoint": "/v1/status",
+      "protocol": "https",
+      "enabled": false,
+      "description": "API gateway service"
+    },
+    {
+      "id": 5,
+      "name": "Load Balancer",
+      "ip": "lb.yourcompany.com",
+      "type": "ping",
+      "enabled": false,
+      "description": "Main load balancer"
+    },
+    {
+      "id": 6,
+      "name": "CDN Edge Server",
+      "ip": "cdn.yourcompany.com",
+      "type": "http_check",
+      "port": 443,
+      "protocol": "https",
+      "enabled": false,
+      "description": "CDN edge server"
+    },
+    {
+      "id": 7,
+      "name": "Monitoring Server",
+      "ip": "monitor.yourcompany.com",
+      "type": "http_api",
+      "port": 443,
+      "api_endpoint": "/api/health",
+      "protocol": "https",
+      "auth": {
+        "type": "bearer",
+        "token": "your-api-token"
+      },
+      "enabled": false,
+      "description": "Internal monitoring server"
+    }
+  ],
+  "monitoring_settings": {
+    "check_interval_seconds": 15,
+    "timeout_seconds": 10,
+    "retry_attempts": 3,
+    "alert_thresholds": {
+      "response_time_warning_ms": 3000,
+      "response_time_critical_ms": 5000,
+      "cpu_warning_percent": 80,
+      "cpu_critical_percent": 90,
+      "memory_warning_percent": 85,
+      "memory_critical_percent": 95,
+      "disk_warning_percent": 85,
+      "disk_critical_percent": 95
+    }
+  },
+  "demo_servers": {
+    "description": "Demo servers for testing (enabled by default)",
+    "servers": [
+      {
+        "id": 10,
+        "name": "Google DNS",
+        "ip": "8.8.8.8",
+        "type": "ping",
+        "enabled": true,
+        "description": "Google DNS server for connectivity test"
+      },
+      {
+        "id": 11,
+        "name": "HTTPBin API Test",
+        "ip": "httpbin.org",
+        "type": "http_api",
+        "port": 443,
+        "api_endpoint": "/status/200",
+        "protocol": "https",
+        "enabled": true,
+        "description": "HTTPBin API testing service"
+      },
+      {
+        "id": 12,
+        "name": "Cloudflare",
+        "ip": "cloudflare.com",
+        "type": "http_check",
+        "port": 443,
+        "protocol": "https",
+        "enabled": true,
+        "description": "Cloudflare connectivity test"
+      }
+    ]
+  }
+}
