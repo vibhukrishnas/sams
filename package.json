@@ -1,0 +1,42 @@
+{
+  "name": "sams",
+  "version": "1.0.0",
+  "description": "Server and Application Monitoring System - A comprehensive monitoring solution",
+  "private": true,
+  "workspaces": [
+    "SAMSMobileExpo",
+    "backend/*",
+    "infrastructure-monitoring-system"
+  ],
+  "scripts": {
+    "start:mobile": "cd SAMSMobileExpo && npm start",
+    "start:backend": "cd backend/nodejs-express && npm start",
+    "start:monitoring": "cd infrastructure-monitoring-system && npm start",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces",
+    "build": "npm run build --workspaces"
+  },
+  "keywords": [
+    "monitoring",
+    "server-management",
+    "react-native",
+    "nodejs",
+    "infrastructure"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "dependencies": {
+    "@react-navigation/drawer": "^7.5.4",
+    "@react-navigation/native": "^7.1.15",
+    "expo": "^53.0.20",
+    "react-native-gesture-handler": "~2.24.0",
+    "react-native-reanimated": "~3.17.4",
+    "react-dom": "19.0.0",
+    "react-native-web": "^0.20.0",
+    "@expo/metro-runtime": "~5.0.4"
+  }
+}

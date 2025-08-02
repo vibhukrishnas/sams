@@ -1,0 +1,38 @@
+# Build stage
+FROM node:18-slim as builder
+
+WORKDIR /build
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Runtime stage
+FROM node:18-slim
+
+WORKDIR /app
+COPY --from=builder /build/node_modules ./node_modules
+COPY . .
+
+# Install required system tools
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+RUN useradd -m -r -s /bin/bash sams && \
+    chown -R sams:sams /app
+
+USER sams
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+    CMD curl -f http://localhost:3000/health || exit 1
+
+# Environment variables
+ENV NODE_ENV=production \
+    PORT=3000
+
+# Expose API port
+EXPOSE 3000
+
+CMD ["node", "src/server.js"]

@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sams-web
+  namespace: sams
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sams-web
+  template:
+    metadata:
+      labels:
+        app: sams-web
+    spec:
+      containers:
+      - name: web
+        image: sams/web:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        env:
+        - name: API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: sams-config
+              key: api_url
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000

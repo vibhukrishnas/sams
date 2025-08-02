@@ -1,0 +1,48 @@
+# Flask Core
+Flask==2.3.3
+Flask-RESTful==0.3.10
+Flask-CORS==4.0.0
+Flask-SocketIO==5.3.4
+python-socketio==5.9.0
+
+# Database Drivers & ORMs
+PyMySQL==1.1.0
+psycopg2-binary==2.9.7
+cx-Oracle==8.3.0
+pyodbc==4.0.39
+SQLAlchemy==2.0.21
+pymongo==4.5.0
+
+# Authentication & Security
+Flask-JWT-Extended==4.5.2
+python-jose==3.3.0
+cryptography==41.0.4
+bcrypt==4.0.1
+
+# Caching
+redis==5.0.0
+Flask-Caching==2.1.0
+
+# Real-time System Monitoring
+psutil==5.9.5
+py-cpuinfo==9.0.0
+netifaces==0.11.0
+GPUtil==1.4.0
+
+# Async Support
+gevent==23.9.1
+eventlet==0.33.3
+celery==5.3.4
+
+# Environment & Config
+python-dotenv==1.0.0
+python-decouple==3.8
+
+# Monitoring & Logging
+prometheus-client==0.17.1
+python-json-logger==2.0.7
+
+# Utilities
+requests==2.31.0
+APScheduler==3.10.4
+marshmallow==3.20.1

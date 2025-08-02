@@ -1,0 +1,221 @@
+package com.sams.model;
+
+import lombok.Data;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * System Metrics Data Transfer Objects
+ * Used for API responses and data transfer
+ */
+public class SystemMetrics {
+
+    @Data
+    @SuperBuilder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class SystemInfo {
+        private String hostname;
+        private String os;
+        private String architecture;
+        private int processors;
+        private long uptime;
+        private LocalDateTime timestamp;
+        private CpuMetrics cpu;
+        private MemoryMetrics memory;
+        private DiskMetrics disk;
+        private NetworkMetrics network;
+        private List<ProcessMetrics> processes;
+    }
+
+    @Data
+    @SuperBuilder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CpuMetrics {
+        @JsonProperty("usage_percent")
+        private double usagePercent;
+        
+        @JsonProperty("load_average")
+        private double[] loadAverage;
+        
+        private int cores;
+        private String model;
+        private long frequency;
+    }
+
+    @Data
+    @SuperBuilder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MemoryMetrics {
+        private long total;
+        private long available;
+        private long used;
+        
+        @JsonProperty("usage_percent")
+        private double usagePercent;
+        
+        @JsonProperty("swap_total")
+        private long swapTotal;
+        
+        @JsonProperty("swap_used")
+        private long swapUsed;
+    }
+
+    @Data
+    @SuperBuilder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DiskMetrics {
+        private long total;
+        private long free;
+        private long used;
+        
+        @JsonProperty("usage_percent")
+        private double usagePercent;
+        
+        private List<DiskPartition> partitions;
+    }
+
+    @Data
+    @SuperBuilder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DiskPartition {
+        private String name;
+        private String mount;
+        private String type;
+        private long total;
+        private long free;
+        private long used;
+        
+        @JsonProperty("usage_percent")
+        private double usagePercent;
+    }
+
+    @Data
+    @SuperBuilder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class NetworkMetrics {
+        @JsonProperty("bytes_sent")
+        private long bytesSent;
+        
+        @JsonProperty("bytes_recv")
+        private long bytesReceived;
+        
+        @JsonProperty("packets_sent")
+        private long packetsSent;
+        
+        @JsonProperty("packets_recv")
+        private long packetsReceived;
+        
+        private List<NetworkInterface> interfaces;
+    }
+
+    @Data
+    @SuperBuilder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class NetworkInterface {
+        private String name;
+        private String displayName;
+        
+        @JsonProperty("bytes_sent")
+        private long bytesSent;
+        
+        @JsonProperty("bytes_recv")
+        private long bytesReceived;
+        
+        private boolean up;
+        private long speed;
+    }
+
+    @Data
+    @SuperBuilder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ProcessMetrics {
+        private int pid;
+        private String name;
+        
+        @JsonProperty("cpu_percent")
+        private double cpuPercent;
+        
+        @JsonProperty("memory_percent")
+        private double memoryPercent;
+        
+        @JsonProperty("memory_rss")
+        private long memoryRss;
+        
+        private String status;
+        private String user;
+    }
+
+    @Data
+    @SuperBuilder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DatabaseMetrics {
+        private String url;
+        private String driver;
+        private boolean connected;
+        private int activeConnections;
+        private int maxConnections;
+        private long connectionTime;
+        private String status;
+        private Map<String, Object> details;
+        private LocalDateTime lastCheck;
+    }
+
+    @Data
+    @SuperBuilder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class RemoteServerMetrics {
+        private String name;
+        private String host;
+        private String type;
+        private boolean online;
+        private long responseTime;
+        private String status;
+        private Map<String, Object> details;
+        private LocalDateTime lastCheck;
+    }
+
+    @Data
+    @SuperBuilder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AlertMetrics {
+        private String id;
+        private String type;
+        private String severity;
+        private String message;
+        private String source;
+        private boolean acknowledged;
+        private LocalDateTime timestamp;
+        private LocalDateTime acknowledgedAt;
+        private String acknowledgedBy;
+    }
+
+    @Data
+    @SuperBuilder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MonitoringOverview {
+        private SystemInfo system;
+        private List<DatabaseMetrics> databases;
+        private List<RemoteServerMetrics> remoteServers;
+        private List<AlertMetrics> alerts;
+        private LocalDateTime timestamp;
+        private String status;
+    }
+}

@@ -15,10 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * SAMS Monitoring REST API Controller
- * Provides endpoints for system, database, and remote server monitoring
- */
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = {"http://localhost:8082", "http://localhost:3000", "http://192.168.1.*"})

@@ -1,0 +1,27 @@
+{
+  "name": "sams-agent",
+  "version": "1.0.0",
+  "description": "SAMS Monitoring Agent - Node.js Implementation",
+  "main": "sams_agent.js",
+  "scripts": {
+    "start": "node sams_agent.js",
+    "test": "jest",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "systeminformation": "^5.21.22",
+    "os-utils": "^0.0.14",
+    "node-os-utils": "^1.3.7",
+    "axios": "^1.6.5",
+    "winston": "^3.11.0",
+    "compression": "^1.7.4"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "eslint": "^8.56.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "MIT"
+}

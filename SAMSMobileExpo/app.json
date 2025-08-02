@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "SAMS Mobile",
+    "slug": "sams-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#1976D2"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourdomain.samsmobile"
+    },
+    "android": {
+      "package": "com.yourdomain.samsmobile"
+    },
+    "web": {
+      "favicon": null
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "color": "#ffffff"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id"
+      }
+    }
+  }
+}
