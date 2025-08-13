@@ -1,0 +1,120 @@
+# SAMS Distributed System Configuration
+# Following enterprise distributed systems best practices
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sams-distributed-config
+  namespace: monitoring
+data:
+  # Configuration as Code - Following Best Practices
+  monitoring.yml: |
+    monitoring:
+      collection_interval: 30s
+      retention_period: 30d
+      alerting:
+        thresholds:
+          cpu_usage: 80
+          memory_usage: 90
+          disk_usage: 85
+          response_time: 5000ms
+        channels:
+          - slack
+          - email
+          - webhook
+      
+      # Distributed Metrics Collection
+      targets:
+        - name: "windows-servers"
+          type: "windows"
+          discovery: "dns"
+          endpoints:
+            - "sams-win-01.local:8080"
+            - "sams-win-02.local:8080"
+            - "sams-win-03.local:8080"
+        
+        - name: "linux-servers" 
+          type: "linux"
+          discovery: "consul"
+          endpoints:
+            - "sams-linux-01.local:8080"
+            - "sams-linux-02.local:8080"
+      
+      # Observability Stack
+      observability:
+        tracing:
+          enabled: true
+          backend: "jaeger"
+          sampling_rate: 0.1
+          endpoint: "http://jaeger-collector:14268/api/traces"
+        
+        logging:
+          enabled: true
+          backend: "elasticsearch"
+          level: "INFO"
+          structured: true
+          endpoint: "http://elasticsearch:9200"
+        
+        metrics:
+          enabled: true
+          backend: "prometheus"
+          scrape_interval: 15s
+          endpoint: "http://prometheus:9090"
+
+  # Network Configuration for Distributed Setup
+  network.yml: |
+    network:
+      cluster_mode: true
+      discovery:
+        method: "dns"
+        domain: "sams.local"
+      
+      load_balancing:
+        enabled: true
+        algorithm: "round_robin"
+        health_check_interval: 30s
+      
+      security:
+        tls_enabled: true
+        mutual_tls: true
+        cert_path: "/certs/sams-server.crt"
+        key_path: "/certs/sams-server.key"
+      
+      redundancy:
+        replication_factor: 3
+        failover_timeout: 10s
+        backup_servers: 2
+
+  # Application Configuration
+  application.yml: |
+    application:
+      name: "SAMS-Distributed"
+      version: "2.0.0"
+      environment: "production"
+      
+      # Service Discovery
+      service_discovery:
+        enabled: true
+        provider: "consul"
+        health_check: "/api/v1/health"
+        tags: ["monitoring", "sams", "distributed"]
+      
+      # Database Configuration
+      database:
+        type: "distributed"
+        primary: "postgresql://sams-db-01:5432/sams"
+        replicas:
+          - "postgresql://sams-db-02:5432/sams"
+          - "postgresql://sams-db-03:5432/sams"
+        connection_pool: 20
+        read_replicas: true
+      
+      # Caching Layer
+      cache:
+        enabled: true
+        provider: "redis"
+        cluster_mode: true
+        nodes:
+          - "redis-01:6379"
+          - "redis-02:6379" 
+          - "redis-03:6379"

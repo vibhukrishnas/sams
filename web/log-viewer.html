@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAMS - Application Log Viewer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        .left-panel {
+            width: 300px;
+            background: #2a2a2a;
+            border-right: 1px solid #404040;
+            padding: 20px;
+        }
+        
+        .right-panel {
+            flex: 1;
+            background: #1a1a1a;
+            padding: 20px;
+        }
+        
+        .view-logs-header {
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        
+        .search-container {
+            position: relative;
+            margin-bottom: 30px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px 40px 12px 15px;
+            background: #1a1a1a;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 14px;
+        }
+        
+        .search-input::placeholder {
+            color: #808080;
+        }
+        
+        .search-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #4a90e2;
+            font-size: 16px;
+        }
+        
+        .app-selector {
+            position: relative;
+            margin-bottom: 30px;
+        }
+        
+        .app-list {
+            background: #333333;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .app-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-bottom: 1px solid #404040;
+            position: relative;
+        }
+        
+        .app-item:last-child {
+            border-bottom: none;
+        }
+        
+        .app-item:hover {
+            background: #404040;
+        }
+        
+        .app-item.selected {
+            background: #4a90e2;
+            color: #ffffff;
+        }
+        
+        .nav-arrows {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 10px;
+        }
+        
+        .nav-arrow {
+            color: #4a90e2;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 2px;
+        }
+        
+        .nav-arrow:hover {
+            color: #ffffff;
+        }
+        
+        .logs-alerts-header {
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .app-name-filter {
+            width: 200px;
+            padding: 10px 15px;
+            background: #333333;
+            border: 1px solid #404040;
+            border-radius: 6px;
+            color: #ffffff;
+            font-size: 14px;
+            margin: 0 auto 20px auto;
+            display: block;
+            text-align: center;
+        }
+        
+        .log-entries-container {
+            background: #2a2a2a;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        
+        .log-entry {
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.4;
+            position: relative;
+            border-left: 4px solid;
+        }
+        
+        .log-entry.critical {
+            background: rgba(239, 68, 68, 0.1);
+            border-left-color: #ef4444;
+            color: #fecaca;
+        }
+        
+        .log-entry.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-left-color: #f59e0b;
+            color: #fde68a;
+        }
+        
+        .log-entry.success {
+            background: rgba(34, 197, 94, 0.1);
+            border-left-color: #22c55e;
+            color: #bbf7d0;
+        }
+        
+        .log-entry.info {
+            background: rgba(59, 130, 246, 0.1);
+            border-left-color: #3b82f6;
+            color: #dbeafe;
+        }
+        
+        .log-timestamp {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-right: 10px;
+        }
+        
+        .filter-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .filter-btn.alert {
+            background: #ef4444;
+            color: #ffffff;
+        }
+        
+        .filter-btn.warn {
+            background: #f59e0b;
+            color: #ffffff;
+        }
+        
+        .filter-btn:hover {
+            opacity: 0.8;
+            transform: translateY(-1px);
+        }
+        
+        .filter-btn.active {
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        
+        .status-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .scrollbar::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+        
+        .scrollbar::-webkit-scrollbar-thumb {
+            background: #404040;
+            border-radius: 3px;
+        }
+        
+        .scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #555555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Panel - View Logs -->
+        <div class="left-panel">
+            <h2 class="view-logs-header">View Logs</h2>
+            
+            <!-- Search Box -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="--Search by App Name--" id="appSearch">
+                <span class="search-icon">🔍</span>
+            </div>
+            
+            <!-- Application List -->
+            <div class="app-selector">
+                <div class="app-list" id="appList">
+                    <div class="app-item selected" data-app="cisco-anyconnect">
+                        Cisco AnyConnect
+                        <div class="nav-arrows">
+                            <span class="nav-arrow">◀</span>
+                            <span class="nav-arrow">▶</span>
+                        </div>
+                    </div>
+                    <div class="app-item" data-app="reporting-services">
+                        Reporting Services
+                        <div class="nav-arrows">
+                            <span class="nav-arrow">◀</span>
+                            <span class="nav-arrow">▶</span>
+                        </div>
+                    </div>
+                    <div class="app-item" data-app="winbeat-monitor">
+                        WinBeat Monitor
+                        <div class="nav-arrows">
+                            <span class="nav-arrow">◀</span>
+                            <span class="nav-arrow">▶</span>
+                        </div>
+                    </div>
+                    <div class="app-item" data-app="fortinet-vpn">
+                        Fortinet VPN
+                        <div class="nav-arrows">
+                            <span class="nav-arrow">◀</span>
+                            <span class="nav-arrow">▶</span>
+                        </div>
+                    </div>
+                    <div class="app-item" data-app="sams-backend">
+                        SAMS Backend
+                        <div class="nav-arrows">
+                            <span class="nav-arrow">◀</span>
+                            <span class="nav-arrow">▶</span>
+                        </div>
+                    </div>
+                    <div class="app-item" data-app="database-server">
+                        Database Server
+                        <div class="nav-arrows">
+                            <span class="nav-arrow">◀</span>
+                            <span class="nav-arrow">▶</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Panel - Logs and Alerts -->
+        <div class="right-panel">
+            <h2 class="logs-alerts-header">Logs and Alerts</h2>
+            
+            <!-- App Name Filter -->
+            <input type="text" class="app-name-filter" value="--App Name--" id="selectedAppName" readonly>
+            
+            <!-- Log Entries -->
+            <div class="log-entries-container scrollbar" id="logContainer">
+                <div class="log-entry critical">
+                    <span class="log-timestamp">2025-07-21 22:01:22</span>
+                    Out Of Memory Error - Check CrashDumps (2025-07-21 22:01:22)
+                </div>
+                <div class="log-entry success">
+                    <span class="log-timestamp">2025-07-21 22:00:22</span>
+                    Server Startup Complete (2025-07-21 22:00:22)
+                </div>
+                <div class="log-entry warning">
+                    <span class="log-timestamp">2025-07-21 22:00:22</span>
+                    [WARNING] Slow in n/w transactions (2025-07-21 22:00:22)
+                </div>
+                <div class="log-entry success">
+                    <span class="log-timestamp">2025-07-21 22:13:22</span>
+                    Queue Process Completed (2025-07-21 22:13:22)
+                </div>
+                <div class="log-entry warning">
+                    <span class="log-timestamp">2025-07-21 22:20:22</span>
+                    [WARNING] Slow in n/w transactions (2025-07-21 22:20:22)
+                </div>
+                <div class="log-entry warning">
+                    <span class="log-timestamp">2025-07-21 22:32:22</span>
+                    [WARNING] Slow in n/w transactions (2025-07-21 22:32:22)
+                </div>
+            </div>
+            
+            <!-- Filter Buttons -->
+            <div class="filter-buttons">
+                <button class="filter-btn alert" id="alertBtn">Alert</button>
+                <button class="filter-btn warn" id="warnBtn">Warn</button>
+            </div>
+            
+            <!-- Status Indicator -->
+            <div class="status-indicator"></div>
+        </div>
+    </div>
+
+    <script>
+        // Application log data
+        const appLogs = {
+            'cisco-anyconnect': [
+                { type: 'success', timestamp: '2025-08-10 19:50:15', message: 'VPN Connection Established Successfully' },
+                { type: 'warning', timestamp: '2025-08-10 19:45:22', message: '[WARNING] Certificate expiring in 30 days' },
+                { type: 'info', timestamp: '2025-08-10 19:40:10', message: 'AnyConnect Service Started' },
+                { type: 'critical', timestamp: '2025-08-10 19:35:05', message: 'Connection Failed - Authentication Error' }
+            ],
+            'reporting-services': [
+                { type: 'success', timestamp: '2025-08-10 19:55:30', message: 'Report Generation Completed (Report_001.pdf)' },
+                { type: 'warning', timestamp: '2025-08-10 19:50:12', message: '[WARNING] Report queue processing slow' },
+                { type: 'critical', timestamp: '2025-08-10 19:45:08', message: 'Out Of Memory Error - Check CrashDumps (2025-08-10 19:45:08)' },
+                { type: 'success', timestamp: '2025-08-10 19:40:15', message: 'Reporting Services Started Successfully' }
+            ],
+            'winbeat-monitor': [
+                { type: 'info', timestamp: '2025-08-10 19:52:20', message: 'System metrics collected successfully' },
+                { type: 'warning', timestamp: '2025-08-10 19:48:15', message: '[WARNING] High CPU usage detected (85%)' },
+                { type: 'success', timestamp: '2025-08-10 19:45:10', message: 'WinBeat Monitor Service Started' },
+                { type: 'critical', timestamp: '2025-08-10 19:42:05', message: 'Disk space critically low (C: Drive 95% full)' }
+            ],
+            'fortinet-vpn': [
+                { type: 'success', timestamp: '2025-08-10 19:53:25', message: 'VPN Tunnel Established (10.0.1.100)' },
+                { type: 'warning', timestamp: '2025-08-10 19:48:30', message: '[WARNING] Slow in n/w transactions (2025-08-10 19:48:30)' },
+                { type: 'info', timestamp: '2025-08-10 19:45:20', message: 'FortiClient VPN Service Initialized' },
+                { type: 'critical', timestamp: '2025-08-10 19:40:15', message: 'VPN Connection Timeout - Check Network Settings' }
+            ],
+            'sams-backend': [
+                { type: 'success', timestamp: '2025-08-10 19:54:40', message: 'Server Startup Complete (2025-08-10 19:54:40)' },
+                { type: 'info', timestamp: '2025-08-10 19:50:35', message: 'Database connection established' },
+                { type: 'warning', timestamp: '2025-08-10 19:48:25', message: '[WARNING] Slow in n/w transactions (2025-08-10 19:48:25)' },
+                { type: 'success', timestamp: '2025-08-10 19:45:30', message: 'Queue Process Completed (2025-08-10 19:45:30)' }
+            ],
+            'database-server': [
+                { type: 'success', timestamp: '2025-08-10 19:55:45', message: 'Database backup completed successfully' },
+                { type: 'warning', timestamp: '2025-08-10 19:50:20', message: '[WARNING] Transaction log growing large (2.1GB)' },
+                { type: 'critical', timestamp: '2025-08-10 19:45:15', message: 'Database connection pool exhausted' },
+                { type: 'info', timestamp: '2025-08-10 19:40:10', message: 'SQL Server Database Engine started' }
+            ]
+        };
+
+        let currentApp = 'cisco-anyconnect';
+        let currentFilter = 'all';
+
+        // Initialize the interface
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAppLogs(currentApp);
+            setupEventListeners();
+            startLogRefresh();
+        });
+
+        function setupEventListeners() {
+            // App selection
+            document.querySelectorAll('.app-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    document.querySelectorAll('.app-item').forEach(i => i.classList.remove('selected'));
+                    this.classList.add('selected');
+                    currentApp = this.dataset.app;
+                    updateSelectedApp();
+                    loadAppLogs(currentApp);
+                });
+            });
+
+            // Filter buttons
+            document.getElementById('alertBtn').addEventListener('click', () => setFilter('critical'));
+            document.getElementById('warnBtn').addEventListener('click', () => setFilter('warning'));
+
+            // Search functionality
+            document.getElementById('appSearch').addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                document.querySelectorAll('.app-item').forEach(item => {
+                    const appName = item.textContent.toLowerCase();
+                    item.style.display = appName.includes(searchTerm) ? 'block' : 'none';
+                });
+            });
+        }
+
+        function updateSelectedApp() {
+            const appNames = {
+                'cisco-anyconnect': 'Cisco AnyConnect',
+                'reporting-services': 'Reporting Services',
+                'winbeat-monitor': 'WinBeat Monitor',
+                'fortinet-vpn': 'Fortinet VPN',
+                'sams-backend': 'SAMS Backend',
+                'database-server': 'Database Server'
+            };
+            document.getElementById('selectedAppName').value = appNames[currentApp];
+        }
+
+        function loadAppLogs(appKey) {
+            const logs = appLogs[appKey] || [];
+            const container = document.getElementById('logContainer');
+            
+            let filteredLogs = logs;
+            if (currentFilter !== 'all') {
+                filteredLogs = logs.filter(log => log.type === currentFilter);
+            }
+
+            container.innerHTML = filteredLogs.map(log => `
+                <div class="log-entry ${log.type}">
+                    <span class="log-timestamp">${log.timestamp}</span>
+                    ${log.message}
+                </div>
+            `).join('');
+
+            // Update filter button states
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            if (currentFilter === 'critical') {
+                document.getElementById('alertBtn').classList.add('active');
+            } else if (currentFilter === 'warning') {
+                document.getElementById('warnBtn').classList.add('active');
+            }
+        }
+
+        function setFilter(filterType) {
+            currentFilter = currentFilter === filterType ? 'all' : filterType;
+            loadAppLogs(currentApp);
+        }
+
+        function addNewLogEntry(appKey, logEntry) {
+            if (!appLogs[appKey]) {
+                appLogs[appKey] = [];
+            }
+            appLogs[appKey].unshift(logEntry);
+            
+            // Keep only last 50 entries per app
+            if (appLogs[appKey].length > 50) {
+                appLogs[appKey] = appLogs[appKey].slice(0, 50);
+            }
+            
+            // Refresh if current app
+            if (appKey === currentApp) {
+                loadAppLogs(currentApp);
+            }
+        }
+
+        function startLogRefresh() {
+            // Simulate real-time log updates
+            setInterval(() => {
+                const apps = Object.keys(appLogs);
+                const randomApp = apps[Math.floor(Math.random() * apps.length)];
+                const logTypes = ['info', 'warning', 'success', 'critical'];
+                const randomType = logTypes[Math.floor(Math.random() * logTypes.length)];
+                
+                const messages = {
+                    'info': ['System check completed', 'Service heartbeat received', 'Configuration updated'],
+                    'warning': ['[WARNING] High resource usage detected', '[WARNING] Network latency increased', '[WARNING] Connection pool near limit'],
+                    'success': ['Operation completed successfully', 'Service started', 'Backup completed'],
+                    'critical': ['Service failure detected', 'Connection timeout', 'Critical error in process']
+                };
+                
+                const randomMessage = messages[randomType][Math.floor(Math.random() * messages[randomType].length)];
+                const timestamp = new Date().toISOString().slice(0, 19).replace('T', ' ');
+                
+                addNewLogEntry(randomApp, {
+                    type: randomType,
+                    timestamp: timestamp,
+                    message: randomMessage
+                });
+            }, 5000); // Add new log every 5 seconds
+        }
+
+        // Initialize with first app
+        updateSelectedApp();
+    </script>
+</body>
+</html>

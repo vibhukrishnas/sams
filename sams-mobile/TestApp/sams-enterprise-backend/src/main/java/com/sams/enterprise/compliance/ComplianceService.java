@@ -1,8 +1,6 @@
 package com.sams.enterprise.compliance;
 
-import com.sams.enterprise.entity.User;
 import com.sams.enterprise.entity.Alert;
-import com.sams.enterprise.entity.Server;
 import com.sams.enterprise.repository.UserRepository;
 import com.sams.enterprise.repository.AlertRepository;
 import com.sams.enterprise.repository.ServerRepository;
@@ -389,8 +387,15 @@ public class ComplianceService {
         long totalServers = serverRepository.count();
         long monitoredServers = serverRepository.findByMonitoringEnabled(true).size();
         
+        // Check alert response capability
+        long totalAlerts = alertRepository.count();
+        long resolvedAlerts = alertRepository.countByStatus(Alert.AlertStatus.RESOLVED);
+        double alertResponseScore = totalAlerts > 0 ? (double) resolvedAlerts / totalAlerts * 100 : 100;
+        
         double monitoringScore = totalServers > 0 ? (double) monitoredServers / totalServers * 100 : 0;
-        return monitoringScore;
+        
+        // Combine monitoring coverage and alert response capability
+        return (monitoringScore + alertResponseScore) / 2;
     }
 
     private double assessAccessControlPolicy() {

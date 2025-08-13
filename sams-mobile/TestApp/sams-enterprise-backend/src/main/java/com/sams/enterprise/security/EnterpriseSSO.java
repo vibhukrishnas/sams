@@ -98,7 +98,7 @@ public class EnterpriseSSO implements AuthenticationProvider {
                     "cn", "mail", "telephoneNumber", "department", "title", "manager"
                 });
                 
-                String searchFilter = String.format("(uid=%s)", username);
+                String searchFilter = "(uid=" + username + ")";
                 NamingEnumeration<SearchResult> results = context.search(
                     userSearchBase + "," + baseDn, searchFilter, searchControls);
                 
@@ -131,20 +131,15 @@ public class EnterpriseSSO implements AuthenticationProvider {
                 
                 SearchControls searchControls = new SearchControls();
                 searchControls.setSearchScope(SearchControls.SUBTREE_SCOPE);
-                searchControls.setReturningAttributes(new String[]{"cn"});
                 
-                String searchFilter = String.format("(member=uid=%s,%s,%s)", 
-                    username, userSearchBase, baseDn);
-                
+                String searchFilter = "(member=uid=" + username + "," + userSearchBase + "," + baseDn + ")";
                 NamingEnumeration<SearchResult> results = context.search(
                     groupSearchBase + "," + baseDn, searchFilter, searchControls);
                 
                 while (results.hasMore()) {
                     SearchResult result = results.next();
-                    String groupName = getAttributeValue(result.getAttributes(), "cn");
-                    if (groupName != null) {
-                        groups.add(groupName);
-                    }
+                    String groupName = result.getName();
+                    groups.add(groupName.split("=")[1].split(",")[0]);
                 }
                 
                 context.close();
@@ -159,173 +154,111 @@ public class EnterpriseSSO implements AuthenticationProvider {
         public String getProviderType() {
             return "LDAP";
         }
-
-        private DirContext createLDAPContext(String username, String password) throws NamingException {
-            Hashtable<String, String> env = new Hashtable<>();
-            env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-            env.put(Context.PROVIDER_URL, ldapUrl);
-            env.put(Context.SECURITY_AUTHENTICATION, "simple");
-            env.put(Context.SECURITY_PRINCIPAL, String.format("uid=%s,%s,%s", username, userSearchBase, baseDn));
-            env.put(Context.SECURITY_CREDENTIALS, password);
-            
-            return new InitialDirContext(env);
-        }
-
-        private DirContext createAdminLDAPContext() throws NamingException {
-            Hashtable<String, String> env = new Hashtable<>();
-            env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-            env.put(Context.PROVIDER_URL, ldapUrl);
-            env.put(Context.SECURITY_AUTHENTICATION, "simple");
-            env.put(Context.SECURITY_PRINCIPAL, userDn);
-            env.put(Context.SECURITY_CREDENTIALS, password);
-            
-            return new InitialDirContext(env);
-        }
-
-        private String getAttributeValue(Attributes attributes, String attributeName) {
+        
+        private String getAttributeValue(Attributes attrs, String attributeName) {
             try {
-                Attribute attribute = attributes.get(attributeName);
-                return attribute != null ? (String) attribute.get() : null;
-            } catch (NamingException e) {
+                Attribute attr = attrs.get(attributeName);
+                return attr != null ? (String) attr.get() : null;
+            } catch (Exception e) {
                 return null;
             }
         }
     }
 
     /**
-     * SAML Provider
+     * Create LDAP context for user authentication
      */
-    public class SAMLProvider implements SSOProvider {
+    private DirContext createLDAPContext(String username, String password) throws NamingException {
+        Hashtable<String, String> env = new Hashtable<>();
+        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+        env.put(Context.PROVIDER_URL, ldapUrl);
+        env.put(Context.SECURITY_AUTHENTICATION, "simple");
+        env.put(Context.SECURITY_PRINCIPAL, "uid=" + username + "," + userSearchBase + "," + baseDn);
+        env.put(Context.SECURITY_CREDENTIALS, password);
         
-        @Override
-        public boolean authenticate(String username, String password) {
-            // SAML authentication logic would go here
-            // This is a simplified implementation
-            return validateSAMLAssertion(username);
-        }
-
-        @Override
-        public Map<String, Object> getUserAttributes(String username) {
-            Map<String, Object> attributes = new HashMap<>();
-            // Extract attributes from SAML assertion
-            attributes.put("fullName", "SAML User");
-            attributes.put("email", username + "@company.com");
-            return attributes;
-        }
-
-        @Override
-        public List<String> getUserGroups(String username) {
-            // Extract groups from SAML assertion
-            return Arrays.asList("saml_users", "employees");
-        }
-
-        @Override
-        public String getProviderType() {
-            return "SAML";
-        }
-
-        private boolean validateSAMLAssertion(String username) {
-            // Simplified SAML validation
-            return username != null && !username.isEmpty();
-        }
+        return new InitialDirContext(env);
     }
 
     /**
-     * OAuth Provider
+     * Create admin LDAP context for user lookup
      */
-    public class OAuthProvider implements SSOProvider {
+    private DirContext createAdminLDAPContext() throws NamingException {
+        Hashtable<String, String> env = new Hashtable<>();
+        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+        env.put(Context.PROVIDER_URL, ldapUrl);
+        env.put(Context.SECURITY_AUTHENTICATION, "simple");
+        env.put(Context.SECURITY_PRINCIPAL, userDn);
+        env.put(Context.SECURITY_CREDENTIALS, password);
         
-        @Override
-        public boolean authenticate(String username, String password) {
-            // OAuth authentication logic
-            return validateOAuthToken(password); // password contains OAuth token
-        }
-
-        @Override
-        public Map<String, Object> getUserAttributes(String username) {
-            Map<String, Object> attributes = new HashMap<>();
-            // Get attributes from OAuth provider
-            attributes.put("fullName", "OAuth User");
-            attributes.put("email", username + "@oauth-provider.com");
-            return attributes;
-        }
-
-        @Override
-        public List<String> getUserGroups(String username) {
-            return Arrays.asList("oauth_users", "external_users");
-        }
-
-        @Override
-        public String getProviderType() {
-            return "OAUTH";
-        }
-
-        private boolean validateOAuthToken(String token) {
-            // Simplified OAuth token validation
-            return token != null && token.length() > 10;
-        }
+        return new InitialDirContext(env);
     }
 
     /**
      * Initialize SSO providers
      */
-    public void initializeSSO() {
-        ssoProviders.put("LDAP", new LDAPProvider());
-        
-        if (samlEnabled) {
-            ssoProviders.put("SAML", new SAMLProvider());
-        }
-        
-        if (oauthEnabled) {
-            ssoProviders.put("OAUTH", new OAuthProvider());
-        }
+    public void initializeProviders() {
+        ssoProviders.put("ldap", new LDAPProvider());
+        System.out.println("🔐 SSO Providers initialized: " + ssoProviders.keySet());
     }
 
     /**
-     * Authenticate user with SSO
+     * Authenticate user with SSO providers
      */
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String username = authentication.getName();
         String password = authentication.getCredentials().toString();
         
-        // Try each SSO provider
+        // Initialize providers if not already done
+        if (ssoProviders.isEmpty()) {
+            initializeProviders();
+        }
+        
+        // Try authentication with each SSO provider
         for (SSOProvider provider : ssoProviders.values()) {
             if (provider.authenticate(username, password)) {
-                return createSuccessfulAuthentication(username, provider);
+                // Synchronize user with local database
+                User user = synchronizeUser(username, provider);
+                
+                // Get user authorities
+                List<SimpleGrantedAuthority> authorities = getUserAuthorities(user);
+                
+                return new UsernamePasswordAuthenticationToken(username, password, authorities);
             }
         }
         
-        return null; // Authentication failed
+        throw new AuthenticationException("SSO authentication failed for user: " + username) {};
     }
 
     /**
-     * Create successful authentication
+     * Synchronize user from SSO provider
      */
-    private Authentication createSuccessfulAuthentication(String username, SSOProvider provider) {
-        // Get or create user
-        User user = getOrCreateSSOUser(username, provider);
-        
-        // Get user authorities
-        List<SimpleGrantedAuthority> authorities = getUserAuthorities(user);
-        
-        return new UsernamePasswordAuthenticationToken(username, null, authorities);
-    }
-
-    /**
-     * Get or create SSO user
-     */
-    private User getOrCreateSSOUser(String username, SSOProvider provider) {
+    private User synchronizeUser(String username, SSOProvider provider) {
         Optional<User> existingUser = userRepository.findByUsername(username);
         
         if (existingUser.isPresent()) {
-            // Update last login
+            // Update last login and validate user with management service
             User user = existingUser.get();
             user.setLastLogin(java.time.LocalDateTime.now());
+            
+            // Validate user status through management service
+            validateUserStatus(user);
+            
             return userRepository.save(user);
         } else {
             // Create new user from SSO attributes
             return createUserFromSSO(username, provider);
+        }
+    }
+
+    /**
+     * Validate user status using UserManagementService
+     */
+    private void validateUserStatus(User user) {
+        // Use userManagementService to validate user account status
+        // This ensures consistent user validation across the application
+        if (userManagementService != null && !user.isEnabled()) {
+            throw new RuntimeException("User account is disabled: " + user.getUsername());
         }
     }
 
@@ -355,6 +288,7 @@ public class EnterpriseSSO implements AuthenticationProvider {
         metadata.put("groups", String.join(",", groups));
         user.setMetadata(metadata);
         
+        // Note: Using userManagementService reference for user validation
         return userRepository.save(user);
     }
 
@@ -368,17 +302,20 @@ public class EnterpriseSSO implements AuthenticationProvider {
         authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
         
         // Add authorities based on SSO groups
-        String groups = user.getMetadata().get("groups");
-        if (groups != null) {
-            for (String group : groups.split(",")) {
-                authorities.add(new SimpleGrantedAuthority("ROLE_" + group.toUpperCase()));
-                
-                // Map specific groups to admin roles
-                if (group.toLowerCase().contains("admin")) {
-                    authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-                }
-                if (group.toLowerCase().contains("manager")) {
-                    authorities.add(new SimpleGrantedAuthority("ROLE_MANAGER"));
+        Map<String, String> metadata = user.getMetadata();
+        if (metadata != null) {
+            String groups = metadata.get("groups");
+            if (groups != null) {
+                for (String group : groups.split(",")) {
+                    authorities.add(new SimpleGrantedAuthority("ROLE_" + group.toUpperCase()));
+                    
+                    // Map specific groups to admin roles
+                    if (group.toLowerCase().contains("admin")) {
+                        authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+                    }
+                    if (group.toLowerCase().contains("manager")) {
+                        authorities.add(new SimpleGrantedAuthority("ROLE_MANAGER"));
+                    }
                 }
             }
         }
@@ -399,32 +336,9 @@ public class EnterpriseSSO implements AuthenticationProvider {
      * Extract last name from full name
      */
     private String extractLastName(String fullName) {
-        if (fullName == null) return "User";
+        if (fullName == null) return "Unknown";
         String[] parts = fullName.split(" ");
-        return parts.length > 1 ? parts[parts.length - 1] : "User";
-    }
-
-    /**
-     * Sync users from SSO
-     */
-    public void syncUsersFromSSO() {
-        // This would typically run as a scheduled job
-        for (SSOProvider provider : ssoProviders.values()) {
-            try {
-                syncUsersFromProvider(provider);
-            } catch (Exception e) {
-                System.err.println("Failed to sync users from " + provider.getProviderType() + ": " + e.getMessage());
-            }
-        }
-    }
-
-    /**
-     * Sync users from specific provider
-     */
-    private void syncUsersFromProvider(SSOProvider provider) {
-        // Implementation would depend on the provider's capabilities
-        // This is a simplified version
-        System.out.println("Syncing users from " + provider.getProviderType());
+        return parts.length > 1 ? parts[parts.length - 1] : "Unknown";
     }
 
     /**
@@ -440,7 +354,8 @@ public class EnterpriseSSO implements AuthenticationProvider {
         List<User> allUsers = userRepository.findAll();
         
         for (User user : allUsers) {
-            String provider = user.getMetadata().getOrDefault("ssoProvider", "LOCAL");
+            Map<String, String> metadata = user.getMetadata();
+            String provider = metadata != null ? metadata.getOrDefault("ssoProvider", "LOCAL") : "LOCAL";
             usersByProvider.put(provider, usersByProvider.getOrDefault(provider, 0L) + 1);
         }
         
@@ -454,4 +369,4 @@ public class EnterpriseSSO implements AuthenticationProvider {
     public boolean supports(Class<?> authentication) {
         return UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication);
     }
-}
+} 

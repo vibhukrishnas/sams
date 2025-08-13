@@ -15,7 +15,6 @@ import com.itextpdf.text.pdf.*;
 import com.itextpdf.text.pdf.draw.LineSeparator;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -94,6 +93,20 @@ public class AdvancedReportingService {
         public String getDescription() { return description; }
         public void setDescription(String description) { this.description = description; }
     }
+    
+    /**
+     * Stub: Add Incident Analysis Content to PDF
+     */
+    private void addIncidentAnalysisContent(Document document, ReportConfig config) throws com.itextpdf.text.DocumentException {
+        document.add(new com.itextpdf.text.Paragraph("Incident analysis content would be generated here."));
+    }
+
+    /**
+     * Stub: Add Capacity Planning Content to PDF
+     */
+    private void addCapacityPlanningContent(Document document, ReportConfig config) throws com.itextpdf.text.DocumentException {
+        document.add(new com.itextpdf.text.Paragraph("Capacity planning content would be generated here."));
+    }
 
     /**
      * Report Result
@@ -159,6 +172,9 @@ public class AdvancedReportingService {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Document document = new Document(PageSize.A4);
         PdfWriter writer = PdfWriter.getInstance(document, baos);
+        
+        // Set document metadata
+        writer.setViewerPreferences(PdfWriter.PageLayoutTwoColumnLeft);
         
         document.open();
         
@@ -284,14 +300,19 @@ public class AdvancedReportingService {
         
         document.add(new Paragraph(String.format(
             "Alert Summary: %d total alerts processed. " +
-            "Critical: %d, High: %d, Medium: %d, Low: %d, Info: %d",
+            "Critical: %d, High: %d, Medium: %d, Low: %d",
             alerts.size(),
             severityCount.getOrDefault(Alert.AlertSeverity.CRITICAL, 0L),
             severityCount.getOrDefault(Alert.AlertSeverity.HIGH, 0L),
             severityCount.getOrDefault(Alert.AlertSeverity.MEDIUM, 0L),
-            severityCount.getOrDefault(Alert.AlertSeverity.LOW, 0L),
-            severityCount.getOrDefault(Alert.AlertSeverity.INFO, 0L)
+            severityCount.getOrDefault(Alert.AlertSeverity.LOW, 0L)
         )));
+        
+        // Add alert type breakdown
+        StringBuilder typeBreakdown = new StringBuilder("Alert Types: ");
+        typeCount.forEach((type, count) -> 
+            typeBreakdown.append(String.format("%s: %d, ", type, count)));
+        document.add(new Paragraph(typeBreakdown.toString().replaceAll(", $", "")));
         
         document.add(Chunk.NEWLINE);
         

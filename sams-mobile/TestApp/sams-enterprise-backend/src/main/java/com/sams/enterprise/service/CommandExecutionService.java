@@ -88,6 +88,17 @@ public class CommandExecutionService {
             result.put("error", e.getClass().getSimpleName());
         }
 
+        // Send notification about command execution
+        try {
+            boolean success = (Boolean) result.getOrDefault("success", false);
+            String message = String.format("Command '%s' executed on server %s - %s", 
+                command, result.get("hostname"), success ? "SUCCESS" : "FAILED");
+            notificationService.sendSlackNotification(message, "#system-alerts");
+        } catch (Exception e) {
+            // Log notification failure but don't affect command result
+            System.err.println("Failed to send command execution notification: " + e.getMessage());
+        }
+
         return result;
     }
 

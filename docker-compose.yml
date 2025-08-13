@@ -89,11 +89,11 @@ services:
       timeout: 10s
       retries: 3
 
-  # SAMS Mobile App (React Native Web build)
+  # SAMS Web Frontend
   sams-frontend:
     build:
-      context: ./sams-mobile/TestApp
-      dockerfile: Dockerfile.web
+      context: ./web
+      dockerfile: Dockerfile
     container_name: sams-frontend
     environment:
       REACT_APP_API_URL: http://localhost:8080/api

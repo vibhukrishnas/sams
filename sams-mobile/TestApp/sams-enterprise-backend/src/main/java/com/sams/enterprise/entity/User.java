@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -96,6 +98,12 @@ public class User implements UserDetails {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<UserSession> sessions = new HashSet<>();
+
+    @ElementCollection
+    @CollectionTable(name = "user_metadata", joinColumns = @JoinColumn(name = "user_id"))
+    @MapKeyColumn(name = "metadata_key")
+    @Column(name = "metadata_value")
+    private Map<String, String> metadata = new HashMap<>();
 
     // Constructors
     public User() {}
@@ -248,6 +256,9 @@ public class User implements UserDetails {
 
     public Set<UserSession> getSessions() { return sessions; }
     public void setSessions(Set<UserSession> sessions) { this.sessions = sessions; }
+
+    public Map<String, String> getMetadata() { return metadata; }
+    public void setMetadata(Map<String, String> metadata) { this.metadata = metadata; }
 
     // Enums
     public enum UserStatus {

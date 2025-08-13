@@ -2,7 +2,6 @@ package com.sams.enterprise.service;
 
 import com.sams.enterprise.entity.User;
 import com.sams.enterprise.entity.Role;
-import com.sams.enterprise.entity.Permission;
 import com.sams.enterprise.entity.UserSession;
 import com.sams.enterprise.repository.UserRepository;
 import com.sams.enterprise.repository.RoleRepository;
@@ -189,6 +188,11 @@ public class UserManagementService {
             .orElseThrow(() -> new SecurityException("Session not found or expired"));
 
         User user = session.getUser();
+        
+        // Validate that the token username matches the session user
+        if (!user.getUsername().equals(username)) {
+            throw new SecurityException("Token username mismatch");
+        }
 
         // Create new authentication
         Authentication authentication = new UsernamePasswordAuthenticationToken(
@@ -226,6 +230,7 @@ public class UserManagementService {
         
         userSessionRepository.findByToken(accessToken)
             .ifPresent(session -> {
+                System.out.println("Logging out session: " + sessionId);
                 session.invalidate();
                 userSessionRepository.save(session);
             });

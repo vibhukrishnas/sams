@@ -315,5 +315,13 @@ public class AlertWebSocketHandler implements WebSocketHandler {
         public String getUsername() { return username; }
         public String getToken() { return token; }
         public LocalDateTime getConnectedAt() { return connectedAt; }
+        
+        @Override
+        public String toString() {
+            return String.format("UserSession{userId=%d, username='%s', token='%s...', connectedAt=%s}", 
+                getUserId(), getUsername(), 
+                getToken() != null ? getToken().substring(0, Math.min(10, getToken().length())) : "null",
+                getConnectedAt());
+        }
     }
 }

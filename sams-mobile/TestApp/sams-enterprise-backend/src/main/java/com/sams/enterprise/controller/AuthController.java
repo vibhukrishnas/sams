@@ -6,6 +6,7 @@ import com.sams.enterprise.dto.UserRegistrationRequest;
 import com.sams.enterprise.dto.RefreshTokenRequest;
 import com.sams.enterprise.entity.User;
 import com.sams.enterprise.service.UserManagementService;
+import com.sams.enterprise.security.JwtTokenProvider;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,9 @@ public class AuthController {
 
     @Autowired
     private UserManagementService userManagementService;
+
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
 
     /**
      * User login endpoint
@@ -113,8 +117,9 @@ public class AuthController {
     public ResponseEntity<Boolean> validateToken(@RequestHeader("Authorization") String authHeader) {
         try {
             String token = extractTokenFromHeader(authHeader);
-            // Validate token logic here
-            return ResponseEntity.ok(true);
+            // Validate token using JWT token provider
+            boolean isValid = jwtTokenProvider.validateToken(token);
+            return ResponseEntity.ok(isValid);
             
         } catch (Exception e) {
             return ResponseEntity.ok(false);

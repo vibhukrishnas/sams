@@ -165,10 +165,7 @@ public class NotificationService {
             } else {
                 // Use webhook
                 Payload payload = Payload.builder()
-                    .channel(channel)
                     .text(message)
-                    .username("SAMS Enterprise")
-                    .iconEmoji(":warning:")
                     .build();
 
                 slack.send(slackWebhookUrl, payload);
@@ -319,6 +316,7 @@ public class NotificationService {
                                    boolean includeEmail, boolean includeSMS,
                                    String emailRecipient, String smsRecipient) {
         
+        @SuppressWarnings("unchecked")
         CompletableFuture<Void>[] futures = new CompletableFuture[4];
         int index = 0;
 

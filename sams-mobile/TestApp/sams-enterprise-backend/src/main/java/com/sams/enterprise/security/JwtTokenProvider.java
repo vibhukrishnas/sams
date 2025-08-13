@@ -122,7 +122,6 @@ public class JwtTokenProvider {
     /**
      * Get authorities from JWT token
      */
-    @SuppressWarnings("unchecked")
     public List<String> getAuthoritiesFromToken(String token) {
         try {
             DecodedJWT jwt = verifyToken(token);
