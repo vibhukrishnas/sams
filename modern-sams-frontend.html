@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>SAMS - Modern Admin Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            /* Dark Theme Colors */
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #1a1a24;
+            --bg-glass: rgba(255, 255, 255, 0.05);
+            --bg-card: rgba(255, 255, 255, 0.08);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-muted: rgba(255, 255, 255, 0.5);
+            --accent-primary: #00f5ff;
+            --accent-secondary: #7c3aed;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --border-color: rgba(255, 255, 255, 0.12);
+            --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.3);
+            --blur-amount: 20px;
+            
+            /* Animation & Transition */
+            --transition-fast: 0.15s ease-out;
+            --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            /* Spacing */
+            --space-xs: 0.25rem;
+            --space-sm: 0.5rem;
+            --space-md: 1rem;
+            --space-lg: 1.5rem;
+            --space-xl: 2rem;
+            --space-2xl: 3rem;
+            
+            /* Border Radius */
+            --radius-sm: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.5rem;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            font-size: 16px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Background Effects */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(0, 245, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 40%, rgba(124, 58, 237, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Haptic Feedback Utility Classes */
+        .haptic-light { transition: transform var(--transition-fast); }
+        .haptic-medium { transition: transform var(--transition-fast), box-shadow var(--transition-fast); }
+        .haptic-heavy { transition: transform var(--transition-normal), box-shadow var(--transition-normal); }
+
+        .haptic-light:active { transform: scale(0.98); }
+        .haptic-medium:active { 
+            transform: scale(0.95); 
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        .haptic-heavy:active { 
+            transform: scale(0.93); 
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Glass Morphism Components */
+        .glass {
+            background: var(--bg-glass);
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+            border: 1px solid var(--border-color);
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-card);
+            overflow: hidden;
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity var(--transition-slow);
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: var(--radius-xl);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: var(--space-lg);
+            animation: pulse-logo 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-logo {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .loading-text {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: var(--space-sm);
+        }
+
+        .loading-subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: var(--space-xl);
+        }
+
+        .loading-spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Authentication Screen */
+        .auth-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-lg);
+            z-index: 1000;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 400px;
+            padding: var(--space-2xl);
+            border-radius: var(--radius-xl);
+            text-align: center;
+        }
+
+        .auth-logo {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin: 0 auto var(--space-lg);
+        }
+
+        .auth-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: var(--space-sm);
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .auth-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: var(--space-xl);
+            font-size: 16px;
+        }
+
+        .pin-container {
+            display: flex;
+            gap: var(--space-md);
+            justify-content: center;
+            margin-bottom: var(--space-xl);
+        }
+
+        .pin-input {
+            width: 56px;
+            height: 56px;
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            transition: var(--transition-fast);
+        }
+
+        .pin-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 4px rgba(0, 245, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .auth-button {
+            width: 100%;
+            padding: var(--space-lg);
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border: none;
+            border-radius: var(--radius-md);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: var(--space-md);
+        }
+
+        .auth-error {
+            color: var(--accent-danger);
+            font-size: 14px;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: var(--transition-normal);
+        }
+
+        .auth-error.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Main App Layout */
+        .app-container {
+            display: none;
+            min-height: 100vh;
+            transition: var(--transition-normal);
+        }
+
+        .app-container.show {
+            display: block;
+        }
+
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: var(--space-md);
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(10, 10, 15, 0.8);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .menu-toggle {
+            display: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: var(--space-sm);
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-size: 20px;
+            font-weight: 700;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: var(--space-xs) var(--space-sm);
+            background: var(--bg-card);
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+        }
+
+        .user-menu {
+            position: relative;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* Navigation */
+        .nav-container {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 280px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: var(--space-lg);
+            transform: translateX(-100%);
+            transition: var(--transition-normal);
+            z-index: 99;
+            overflow-y: auto;
+        }
+
+        .nav-container.open {
+            transform: translateX(0);
+        }
+
+        .nav-header {
+            padding-bottom: var(--space-lg);
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: var(--space-lg);
+        }
+
+        .nav-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: var(--space-xs);
+        }
+
+        .nav-subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: var(--space-xs);
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition-fast);
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, rgba(0, 245, 255, 0.1), rgba(124, 58, 237, 0.1));
+            color: var(--accent-primary);
+            border-left: 3px solid var(--accent-primary);
+        }
+
+        .nav-icon {
+            font-size: 18px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 0;
+            padding: var(--space-lg);
+            min-height: calc(100vh - 80px);
+            transition: var(--transition-normal);
+        }
+
+        .content-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Page Header */
+        .page-header {
+            margin-bottom: var(--space-xl);
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: var(--space-sm);
+            background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        /* Grid Layout */
+        .grid {
+            display: grid;
+            gap: var(--space-lg);
+        }
+
+        .grid-cols-1 { grid-template-columns: 1fr; }
+        .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+        /* Metric Cards */
+        .metric-card {
+            padding: var(--space-lg);
+            border-radius: var(--radius-lg);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            transition: var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-glass);
+            border-color: var(--accent-primary);
+        }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-md);
+        }
+
+        .metric-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-icon {
+            font-size: 24px;
+            opacity: 0.7;
+        }
+
+        .metric-value {
+            font-size: 36px;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: var(--space-sm);
+        }
+
+        .metric-change {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .metric-change.positive {
+            color: var(--accent-success);
+        }
+
+        .metric-change.negative {
+            color: var(--accent-danger);
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin-top: var(--space-md);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 4px;
+            transition: width var(--transition-normal);
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-top: var(--space-xs);
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Chart Container */
+        .chart-container {
+            padding: var(--space-lg);
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-lg);
+            background: var(--bg-card);
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: var(--space-sm) var(--space-md);
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            text-decoration: none;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-danger {
+            background: var(--accent-danger);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-card);
+        }
+
+        /* Server Status Cards */
+        .server-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-lg);
+            margin-top: var(--space-xl);
+        }
+
+        .server-card {
+            padding: var(--space-lg);
+            border-radius: var(--radius-lg);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            transition: var(--transition-normal);
+        }
+
+        .server-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glass);
+        }
+
+        .server-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-md);
+        }
+
+        .server-name {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .server-status {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .server-status.online {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-success);
+        }
+
+        .server-status.offline {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--accent-danger);
+        }
+
+        .server-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-md);
+            margin-bottom: var(--space-md);
+        }
+
+        .server-metric {
+            text-align: center;
+        }
+
+        .server-metric-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: var(--space-xs);
+        }
+
+        .server-metric-label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Mobile Optimization */
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+
+            .header-content {
+                padding: 0;
+            }
+
+            .main-content {
+                padding: var(--space-md);
+            }
+
+            .grid-cols-2,
+            .grid-cols-3,
+            .grid-cols-4 {
+                grid-template-columns: 1fr;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+
+            .metric-value {
+                font-size: 28px;
+            }
+
+            .server-metrics {
+                grid-template-columns: 1fr;
+                gap: var(--space-sm);
+            }
+
+            .pin-container {
+                gap: var(--space-sm);
+            }
+
+            .pin-input {
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
+            }
+
+            .auth-container {
+                padding: var(--space-lg);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: var(--space-sm);
+            }
+
+            .main-content {
+                padding: var(--space-sm);
+            }
+
+            .metric-card,
+            .server-card {
+                padding: var(--space-md);
+            }
+
+            .page-title {
+                font-size: 20px;
+            }
+
+            .metric-value {
+                font-size: 24px;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        /* Utility Classes */
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .font-medium { font-weight: 500; }
+        .font-semibold { font-weight: 600; }
+        .font-bold { font-weight: 700; }
+        .text-sm { font-size: 14px; }
+        .text-xs { font-size: 12px; }
+        .opacity-50 { opacity: 0.5; }
+        .opacity-70 { opacity: 0.7; }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 98;
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition-normal);
+        }
+
+        .overlay.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-logo">🚀</div>
+        <div class="loading-text">SAMS</div>
+        <div class="loading-subtitle">System Administration & Monitoring Suite</div>
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Authentication Screen -->
+    <div class="auth-screen glass" id="authScreen">
+        <div class="auth-container glass card animate-fade-in-up">
+            <div class="auth-logo">🔐</div>
+            <h1 class="auth-title">Welcome to SAMS</h1>
+            <p class="auth-subtitle">Enter your 4-digit PIN to access the dashboard</p>
+            
+            <div class="pin-container">
+                <input type="password" class="pin-input haptic-medium" maxlength="1" id="pin1" autocomplete="off">
+                <input type="password" class="pin-input haptic-medium" maxlength="1" id="pin2" autocomplete="off">
+                <input type="password" class="pin-input haptic-medium" maxlength="1" id="pin3" autocomplete="off">
+                <input type="password" class="pin-input haptic-medium" maxlength="1" id="pin4" autocomplete="off">
+            </div>
+            
+            <button class="auth-button haptic-heavy" id="loginBtn">
+                <span>🚀</span> Access Dashboard
+            </button>
+            
+            <div class="auth-error" id="authError">
+                ❌ Invalid PIN. Please try again.
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div class="app-container" id="appContainer">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <button class="menu-toggle haptic-light" id="menuToggle">
+                        <span>☰</span>
+                    </button>
+                    <a href="#" class="logo">
+                        <div class="logo-icon">🚀</div>
+                        <span>SAMS</span>
+                    </a>
+                </div>
+                <div class="header-right">
+                    <div class="status-indicator">
+                        <div class="status-dot"></div>
+                        <span>System Online</span>
+                    </div>
+                    <div class="user-menu">
+                        <div class="user-avatar haptic-medium" id="userAvatar">A</div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Sidebar -->
+        <nav class="nav-container" id="navContainer">
+            <div class="nav-header">
+                <div class="nav-title">Dashboard</div>
+                <div class="nav-subtitle">System Administration</div>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#" class="nav-link haptic-light active" data-page="overview">
+                        <span class="nav-icon">📊</span>
+                        <span>Overview</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link haptic-light" data-page="servers">
+                        <span class="nav-icon">🖥️</span>
+                        <span>Servers</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link haptic-light" data-page="monitoring">
+                        <span class="nav-icon">📈</span>
+                        <span>Monitoring</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link haptic-light" data-page="alerts">
+                        <span class="nav-icon">🚨</span>
+                        <span>Alerts</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link haptic-light" data-page="commands">
+                        <span class="nav-icon">⚡</span>
+                        <span>Commands</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link haptic-light" data-page="reports">
+                        <span class="nav-icon">📋</span>
+                        <span>Reports</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link haptic-light" data-page="settings">
+                        <span class="nav-icon">⚙️</span>
+                        <span>Settings</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link haptic-medium" id="logoutBtn">
+                        <span class="nav-icon">🚪</span>
+                        <span>Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="content-container">
+                <!-- Overview Page -->
+                <div class="page-content animate-fade-in-up" id="overviewPage">
+                    <div class="page-header">
+                        <h1 class="page-title">System Overview</h1>
+                        <p class="page-subtitle">Real-time monitoring and administration dashboard</p>
+                    </div>
+
+                    <!-- Metrics Grid -->
+                    <div class="grid grid-cols-4" id="metricsGrid">
+                        <div class="metric-card haptic-light">
+                            <div class="metric-header">
+                                <div class="metric-title">CPU Usage</div>
+                                <div class="metric-icon">💻</div>
+                            </div>
+                            <div class="metric-value" id="cpuUsage">--</div>
+                            <div class="metric-change positive">
+                                <span>↑</span>
+                                <span>2.1% from last hour</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="cpuProgress" style="width: 0%"></div>
+                                </div>
+                                <div class="progress-label">
+                                    <span>0%</span>
+                                    <span>100%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card haptic-light">
+                            <div class="metric-header">
+                                <div class="metric-title">Memory Usage</div>
+                                <div class="metric-icon">🧠</div>
+                            </div>
+                            <div class="metric-value" id="memoryUsage">--</div>
+                            <div class="metric-change negative">
+                                <span>↓</span>
+                                <span>0.8% from last hour</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="memoryProgress" style="width: 0%"></div>
+                                </div>
+                                <div class="progress-label">
+                                    <span>0 GB</span>
+                                    <span id="totalMemory">-- GB</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card haptic-light">
+                            <div class="metric-header">
+                                <div class="metric-title">Active Servers</div>
+                                <div class="metric-icon">🖥️</div>
+                            </div>
+                            <div class="metric-value" id="activeServers">--</div>
+                            <div class="metric-change positive">
+                                <span>✓</span>
+                                <span>All systems operational</span>
+                            </div>
+                        </div>
+
+                        <div class="metric-card haptic-light">
+                            <div class="metric-header">
+                                <div class="metric-title">Network I/O</div>
+                                <div class="metric-icon">🌐</div>
+                            </div>
+                            <div class="metric-value" id="networkIO">--</div>
+                            <div class="metric-change positive">
+                                <span>↑</span>
+                                <span>15% from last hour</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Section -->
+                    <div class="grid grid-cols-2" style="margin-top: 2rem;">
+                        <div class="chart-container">
+                            <div>📊 CPU Usage Chart<br><small>Chart visualization would go here</small></div>
+                        </div>
+                        <div class="chart-container">
+                            <div>📈 Memory Usage Chart<br><small>Chart visualization would go here</small></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Servers Page -->
+                <div class="page-content hidden" id="serversPage">
+                    <div class="page-header">
+                        <h1 class="page-title">Server Management</h1>
+                        <p class="page-subtitle">Monitor and manage your server infrastructure</p>
+                    </div>
+
+                    <div class="server-grid" id="serverGrid">
+                        <!-- Server cards will be dynamically generated -->
+                    </div>
+                </div>
+
+                <!-- Other pages will be added dynamically -->
+                <div class="page-content hidden" id="monitoringPage">
+                    <div class="page-header">
+                        <h1 class="page-title">System Monitoring</h1>
+                        <p class="page-subtitle">Real-time system performance metrics</p>
+                    </div>
+                    <div class="chart-container">
+                        <div>📊 Monitoring Dashboard<br><small>Advanced monitoring tools would go here</small></div>
+                    </div>
+                </div>
+
+                <div class="page-content hidden" id="alertsPage">
+                    <div class="page-header">
+                        <h1 class="page-title">Alerts & Notifications</h1>
+                        <p class="page-subtitle">System alerts and notification management</p>
+                    </div>
+                    <div class="card" style="padding: 2rem; text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">🚨</div>
+                        <h3>No Active Alerts</h3>
+                        <p style="color: var(--text-secondary); margin-top: 0.5rem;">All systems are running normally</p>
+                    </div>
+                </div>
+
+                <div class="page-content hidden" id="commandsPage">
+                    <div class="page-header">
+                        <h1 class="page-title">Command Execution</h1>
+                        <p class="page-subtitle">Execute system commands remotely</p>
+                    </div>
+                    <div class="card" style="padding: 2rem;">
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Command Input</label>
+                            <input type="text" placeholder="Enter command..." style="width: 100%; padding: 0.75rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-primary);">
+                        </div>
+                        <button class="btn btn-primary haptic-medium">Execute Command</button>
+                    </div>
+                </div>
+
+                <div class="page-content hidden" id="reportsPage">
+                    <div class="page-header">
+                        <h1 class="page-title">Reports & Analytics</h1>
+                        <p class="page-subtitle">System reports and data analytics</p>
+                    </div>
+                    <div class="chart-container">
+                        <div>📋 Reports Dashboard<br><small>Report generation tools would go here</small></div>
+                    </div>
+                </div>
+
+                <div class="page-content hidden" id="settingsPage">
+                    <div class="page-header">
+                        <h1 class="page-title">System Settings</h1>
+                        <p class="page-subtitle">Configure system preferences and options</p>
+                    </div>
+                    <div class="card" style="padding: 2rem;">
+                        <h3 style="margin-bottom: 1rem;">⚙️ Configuration Options</h3>
+                        <p style="color: var(--text-secondary);">System configuration panel would be implemented here</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay"></div>
+
+    <script>
+        // Application State
+        let isAuthenticated = false;
+        let currentPage = 'overview';
+        let updateInterval = null;
+        let isNavOpen = false;
+
+        // Configuration
+        const CONFIG = {
+            VALID_PIN: '1234',
+            API_ENDPOINTS: {
+                java: 'http://localhost:8080/api/v1',
+                python: 'http://localhost:8081/api/v1'
+            },
+            UPDATE_INTERVAL: 5000
+        };
+
+        // Haptic Feedback (for supported devices)
+        function triggerHaptic(type = 'light') {
+            if ('vibrate' in navigator) {
+                const patterns = {
+                    light: 10,
+                    medium: [10, 50, 10],
+                    heavy: [50, 100, 50]
+                };
+                navigator.vibrate(patterns[type] || patterns.light);
+            }
+        }
+
+        // Add haptic feedback to elements
+        function setupHapticFeedback() {
+            document.querySelectorAll('.haptic-light').forEach(el => {
+                el.addEventListener('touchstart', () => triggerHaptic('light'));
+            });
+            
+            document.querySelectorAll('.haptic-medium').forEach(el => {
+                el.addEventListener('touchstart', () => triggerHaptic('medium'));
+            });
+            
+            document.querySelectorAll('.haptic-heavy').forEach(el => {
+                el.addEventListener('touchstart', () => triggerHaptic('heavy'));
+            });
+        }
+
+        // Initialize loading screen
+        function initLoadingScreen() {
+            setTimeout(() => {
+                document.getElementById('loadingScreen').classList.add('hidden');
+            }, 2000);
+        }
+
+        // PIN Input Management
+        function setupPinInputs() {
+            const pinInputs = document.querySelectorAll('.pin-input');
+            
+            pinInputs.forEach((input, index) => {
+                input.addEventListener('input', function() {
+                    if (this.value.length === 1 && index < pinInputs.length - 1) {
+                        pinInputs[index + 1].focus();
+                    }
+                    
+                    // Auto-submit when all fields are filled
+                    if (index === pinInputs.length - 1 && this.value.length === 1) {
+                        setTimeout(() => attemptLogin(), 100);
+                    }
+                });
+                
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Backspace' && this.value === '' && index > 0) {
+                        pinInputs[index - 1].focus();
+                    }
+                    if (e.key === 'Enter') {
+                        attemptLogin();
+                    }
+                });
+
+                // Add haptic feedback
+                input.addEventListener('focus', () => triggerHaptic('light'));
+            });
+
+            // Focus first input
+            pinInputs[0].focus();
+        }
+
+        // Authentication
+        function attemptLogin() {
+            const pinInputs = document.querySelectorAll('.pin-input');
+            const enteredPin = Array.from(pinInputs).map(input => input.value).join('');
+            
+            if (enteredPin.length !== 4) return;
+
+            if (enteredPin === CONFIG.VALID_PIN) {
+                triggerHaptic('heavy');
+                authenticateUser();
+            } else {
+                triggerHaptic('heavy');
+                showAuthError();
+                clearPinInputs();
+            }
+        }
+
+        function authenticateUser() {
+            isAuthenticated = true;
+            document.getElementById('authScreen').style.display = 'none';
+            document.getElementById('appContainer').classList.add('show');
+            startDataUpdates();
+        }
+
+        function showAuthError() {
+            const errorEl = document.getElementById('authError');
+            errorEl.classList.add('show');
+            setTimeout(() => {
+                errorEl.classList.remove('show');
+            }, 3000);
+        }
+
+        function clearPinInputs() {
+            document.querySelectorAll('.pin-input').forEach(input => {
+                input.value = '';
+            });
+            document.getElementById('pin1').focus();
+        }
+
+        function logout() {
+            isAuthenticated = false;
+            document.getElementById('appContainer').classList.remove('show');
+            document.getElementById('authScreen').style.display = 'flex';
+            stopDataUpdates();
+            clearPinInputs();
+            closeNav();
+        }
+
+        // Navigation
+        function setupNavigation() {
+            const menuToggle = document.getElementById('menuToggle');
+            const navContainer = document.getElementById('navContainer');
+            const overlay = document.getElementById('overlay');
+            const navLinks = document.querySelectorAll('.nav-link[data-page]');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            menuToggle.addEventListener('click', toggleNav);
+            overlay.addEventListener('click', closeNav);
+            logoutBtn.addEventListener('click', logout);
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const page = link.dataset.page;
+                    if (page) {
+                        navigateToPage(page);
+                        closeNav();
+                    }
+                });
+            });
+        }
+
+        function toggleNav() {
+            isNavOpen = !isNavOpen;
+            const navContainer = document.getElementById('navContainer');
+            const overlay = document.getElementById('overlay');
+            
+            if (isNavOpen) {
+                navContainer.classList.add('open');
+                overlay.classList.add('show');
+            } else {
+                navContainer.classList.remove('open');
+                overlay.classList.remove('show');
+            }
+        }
+
+        function closeNav() {
+            isNavOpen = false;
+            document.getElementById('navContainer').classList.remove('open');
+            document.getElementById('overlay').classList.remove('show');
+        }
+
+        function navigateToPage(page) {
+            if (currentPage === page) return;
+            
+            currentPage = page;
+            
+            // Update navigation active state
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            document.querySelector(`[data-page="${page}"]`).classList.add('active');
+            
+            // Hide all pages
+            document.querySelectorAll('.page-content').forEach(pageEl => {
+                pageEl.classList.add('hidden');
+            });
+            
+            // Show current page
+            const currentPageEl = document.getElementById(`${page}Page`);
+            if (currentPageEl) {
+                currentPageEl.classList.remove('hidden');
+                currentPageEl.classList.add('animate-fade-in-up');
+            }
+        }
+
+        // Data Updates
+        async function fetchData(endpoint) {
+            try {
+                const response = await fetch(`${CONFIG.API_ENDPOINTS.java}${endpoint}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.error(`Error fetching ${endpoint}:`, error);
+                return null;
+            }
+        }
+
+        async function updateMetrics() {
+            // Simulate metrics for demo
+            const metrics = {
+                cpuUsage: Math.floor(Math.random() * 40) + 20,
+                memoryUsage: Math.floor(Math.random() * 30) + 50,
+                totalMemory: 16,
+                activeServers: 4,
+                networkIO: `${(Math.random() * 100 + 50).toFixed(1)} MB/s`
+            };
+
+            // Update CPU
+            document.getElementById('cpuUsage').textContent = `${metrics.cpuUsage}%`;
+            document.getElementById('cpuProgress').style.width = `${metrics.cpuUsage}%`;
+
+            // Update Memory
+            const memoryUsedGB = (metrics.memoryUsage * metrics.totalMemory / 100).toFixed(1);
+            document.getElementById('memoryUsage').textContent = `${memoryUsedGB} GB`;
+            document.getElementById('memoryProgress').style.width = `${metrics.memoryUsage}%`;
+            document.getElementById('totalMemory').textContent = `${metrics.totalMemory} GB`;
+
+            // Update other metrics
+            document.getElementById('activeServers').textContent = metrics.activeServers;
+            document.getElementById('networkIO').textContent = metrics.networkIO;
+        }
+
+        function updateServerGrid() {
+            const serverGrid = document.getElementById('serverGrid');
+            const servers = [
+                { name: 'Web Server 01', status: 'online', cpu: 45, memory: 62, uptime: '24d 5h' },
+                { name: 'Database Server', status: 'online', cpu: 78, memory: 84, uptime: '15d 12h' },
+                { name: 'API Gateway', status: 'online', cpu: 32, memory: 41, uptime: '30d 2h' },
+                { name: 'Cache Server', status: 'offline', cpu: 0, memory: 0, uptime: '0d 0h' },
+            ];
+
+            serverGrid.innerHTML = servers.map(server => `
+                <div class="server-card haptic-light">
+                    <div class="server-header">
+                        <div class="server-name">${server.name}</div>
+                        <div class="server-status ${server.status}">
+                            <div class="status-dot"></div>
+                            ${server.status.toUpperCase()}
+                        </div>
+                    </div>
+                    <div class="server-metrics">
+                        <div class="server-metric">
+                            <div class="server-metric-value">${server.cpu}%</div>
+                            <div class="server-metric-label">CPU</div>
+                        </div>
+                        <div class="server-metric">
+                            <div class="server-metric-value">${server.memory}%</div>
+                            <div class="server-metric-label">Memory</div>
+                        </div>
+                        <div class="server-metric">
+                            <div class="server-metric-value">${server.uptime}</div>
+                            <div class="server-metric-label">Uptime</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 1rem;">
+                        <button class="btn btn-secondary haptic-medium" style="width: 100%;">
+                            Manage Server
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function startDataUpdates() {
+            updateMetrics();
+            updateServerGrid();
+            
+            updateInterval = setInterval(() => {
+                updateMetrics();
+                if (currentPage === 'servers') {
+                    updateServerGrid();
+                }
+            }, CONFIG.UPDATE_INTERVAL);
+        }
+
+        function stopDataUpdates() {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+                updateInterval = null;
+            }
+        }
+
+        // Responsive handling
+        function handleResize() {
+            if (window.innerWidth > 768 && isNavOpen) {
+                closeNav();
+            }
+        }
+
+        // Initialize Application
+        function initApp() {
+            initLoadingScreen();
+            setupPinInputs();
+            setupNavigation();
+            setupHapticFeedback();
+            
+            // Add login button handler
+            document.getElementById('loginBtn').addEventListener('click', attemptLogin);
+            
+            // Add resize listener
+            window.addEventListener('resize', handleResize);
+            
+            console.log('🚀 SAMS Modern Frontend Initialized');
+        }
+
+        // Start the application
+        document.addEventListener('DOMContentLoaded', initApp);
+
+        // Service Worker Registration (for PWA capabilities)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // Service worker would be registered here for offline capabilities
+                console.log('PWA capabilities ready');
+            });
+        }
+    </script>
+</body>
+</html>

@@ -50,6 +50,24 @@ def get_system_metrics():
             except PermissionError:
                 continue
         
+        # Network metrics
+        network_io = psutil.net_io_counters()
+        network_connections = len(psutil.net_connections())
+        
+        # Network interfaces
+        network_interfaces = []
+        for interface, addrs in psutil.net_if_addrs().items():
+            if_stats = psutil.net_if_stats().get(interface)
+            for addr in addrs:
+                if addr.family == 2:  # IPv4
+                    network_interfaces.append({
+                        'interface': interface,
+                        'ip_address': addr.address,
+                        'is_up': if_stats.isup if if_stats else False,
+                        'speed': if_stats.speed if if_stats else 0
+                    })
+                    break
+        
         # System info
         boot_time = psutil.boot_time()
         uptime = time.time() - boot_time
@@ -65,6 +83,12 @@ def get_system_metrics():
             'memoryAvailable': memory.available,
             'memoryUsagePercent': round(memory.percent, 1),
             'diskUsage': disk_usage,
+            'networkBytesSent': network_io.bytes_sent,
+            'networkBytesReceived': network_io.bytes_recv,
+            'networkPacketsSent': network_io.packets_sent,
+            'networkPacketsReceived': network_io.packets_recv,
+            'networkConnections': network_connections,
+            'networkInterfaces': network_interfaces,
             'hostname': psutil.Process().name(),
             'uptime': int(uptime),
             'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -536,6 +560,68 @@ def refresh_application_logs():
         logger.error(f"❌ Error refreshing application logs: {e}")
         return jsonify({'error': 'Failed to refresh application logs'}), 500
 
+@app.route('/api/v1/execute', methods=['POST'])
+def execute_command():
+    """Execute system commands"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'command' not in data:
+            return jsonify({'error': 'Command is required'}), 400
+        
+        command = data.get('command', '')
+        timeout = data.get('timeout', 30)
+        
+        logger.info(f"🚀 Executing command: {command}")
+        
+        # Import subprocess module
+        import subprocess
+        import threading
+        
+        # Execute the command with timeout
+        try:
+            result = subprocess.run(
+                command,
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=timeout
+            )
+            
+            response = {
+                'status': 'success' if result.returncode == 0 else 'error',
+                'command': command,
+                'returncode': result.returncode,
+                'stdout': result.stdout,
+                'stderr': result.stderr,
+                'timestamp': datetime.now().isoformat()
+            }
+            
+            logger.info(f"✅ Command executed successfully: {command}")
+            return jsonify(response)
+            
+        except subprocess.TimeoutExpired:
+            logger.error(f"⏰ Command timeout: {command}")
+            return jsonify({
+                'status': 'timeout',
+                'command': command,
+                'error': f'Command timed out after {timeout} seconds',
+                'timestamp': datetime.now().isoformat()
+            }), 408
+            
+        except Exception as cmd_error:
+            logger.error(f"❌ Command execution error: {cmd_error}")
+            return jsonify({
+                'status': 'error',
+                'command': command,
+                'error': str(cmd_error),
+                'timestamp': datetime.now().isoformat()
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"❌ Error processing command request: {e}")
+        return jsonify({'error': 'Failed to process command request'}), 500
+
 if __name__ == '__main__':
     logger.info("🐍 Starting SAMS Python Backend Server...")
     logger.info("⚡ Flask + psutil for system monitoring")
@@ -547,12 +633,13 @@ if __name__ == '__main__':
     parse_application_logs()
     
     print("✅ SAMS Python Backend Ready!")
-    print("🔗 API Base URL: http://localhost:8081/api/v1")
-    print("📊 Health Check: http://localhost:8081/api/v1/health")
-    print("📈 Metrics: http://localhost:8081/api/v1/metrics")
-    print("🚨 Alerts: http://localhost:8081/api/v1/alerts")
-    print("🖥️ Servers: http://localhost:8081/api/v1/servers")
-    print("📋 Applications: http://localhost:8081/api/v1/applications")
+    print("🔗 API Base URL: http://localhost:8082/api/v1")
+    print("📊 Health Check: http://localhost:8082/api/v1/health")
+    print("📈 Metrics: http://localhost:8082/api/v1/metrics")
+    print("🚨 Alerts: http://localhost:8082/api/v1/alerts")
+    print("🖥️ Servers: http://localhost:8082/api/v1/servers")
+    print("📋 Applications: http://localhost:8082/api/v1/applications")
+    print("🚀 Execute Commands: http://localhost:8082/api/v1/execute")
     print("")
     
-    app.run(host='0.0.0.0', port=8081, debug=False)
+    app.run(host='0.0.0.0', port=8082, debug=False)

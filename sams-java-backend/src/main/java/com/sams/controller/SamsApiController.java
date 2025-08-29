@@ -32,27 +32,10 @@ public class SamsApiController {
     private final ApplicationLogService applicationLogService;
     
     /**
-     * Health check endpoint
-     * GET /api/v1/health
-     */
-    @GetMapping("/health")
-    public ResponseEntity<Map<String, Object>> healthCheck() {
-        log.info("🔍 Health check requested");
-        
-        return ResponseEntity.ok(Map.of(
-            "status", "UP",
-            "service", "SAMS Java Backend",
-            "version", "2.0.0",
-            "timestamp", LocalDateTime.now(),
-            "message", "🚀 SAMS is running perfectly!"
-        ));
-    }
-    
-    /**
      * Get comprehensive system metrics
-     * GET /api/v1/metrics
+     * GET /api/v1/system/metrics
      */
-    @GetMapping("/metrics")
+    @GetMapping("/system/metrics")
     public ResponseEntity<SystemMetrics> getSystemMetrics() {
         log.info("📊 System metrics requested");
         
@@ -89,12 +72,12 @@ public class SamsApiController {
     }
     
     /**
-     * Get server information
-     * GET /api/v1/servers
+     * Get server information (quick overview)
+     * GET /api/v1/system/servers
      */
-    @GetMapping("/servers")
+    @GetMapping("/system/servers")
     public ResponseEntity<Map<String, Object>> getServers() {
-        log.info("🖥️ Server information requested");
+        log.info("🖥️ Server overview information requested");
         
         try {
             List<ServerInfo> servers = monitoringService.getServerInfo();

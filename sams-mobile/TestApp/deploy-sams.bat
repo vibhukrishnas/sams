@@ -1,6 +1,0 @@
-@echo off
-echo Installing SAMS Enterprise App...
-adb install -r android\app\build\outputs\apk\debug\app-debug.apk
-echo Starting SAMS App...
-adb shell am start -n com.testapp/.MainActivity
-echo SAMS Enterprise App is now running!

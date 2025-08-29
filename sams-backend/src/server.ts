@@ -19,6 +19,10 @@ import reportRoutes from './routes/reports';
 import dashboardRoutes from './routes/dashboard';
 import notificationRoutes from './routes/notifications';
 import incidentRoutes from './routes/incidents';
+import assetsRoutes from './routes/assets';
+import remoteRoutes from './routes/remote';
+import performanceRoutes from './routes/performance';
+import integrationsRoutes from './routes/integrations';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -105,6 +109,12 @@ class SAMSServer {
     this.app.use('/api/dashboard', authMiddleware, dashboardRoutes);
     this.app.use('/api/notifications', authMiddleware, notificationRoutes);
     this.app.use('/api/incidents', authMiddleware, incidentRoutes);
+    
+    // New Strategic Enhancement Routes
+    this.app.use('/api/assets', assetsRoutes);
+    this.app.use('/api/remote', remoteRoutes);
+    this.app.use('/api/performance', performanceRoutes);
+    this.app.use('/api/integrations', integrationsRoutes);
 
     // 404 handler
     this.app.use('*', (req, res) => {

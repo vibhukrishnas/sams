@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAMS - React Modern Frontend</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #1a1a24;
+            --bg-glass: rgba(255, 255, 255, 0.05);
+            --bg-card: rgba(255, 255, 255, 0.08);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --text-muted: rgba(255, 255, 255, 0.5);
+            --accent-primary: #00f5ff;
+            --accent-secondary: #7c3aed;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --border-color: rgba(255, 255, 255, 0.12);
+            --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.3);
+            --blur-amount: 20px;
+            --transition-fast: 0.15s ease-out;
+            --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            --radius-sm: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-xl: 1.5rem;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(0, 245, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 40%, rgba(124, 58, 237, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Component Styles */
+        .app-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out;
+        }
+
+        .loading-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: var(--radius-xl);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 1.5rem;
+            animation: pulse-logo 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-logo {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .loading-text {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .loading-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .loading-spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Auth Components */
+        .auth-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: var(--bg-primary);
+            z-index: 1000;
+        }
+
+        .auth-box {
+            background: var(--bg-glass);
+            backdrop-filter: blur(var(--blur-amount));
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: 3rem;
+            text-align: center;
+            box-shadow: var(--shadow-glass);
+            width: 100%;
+            max-width: 400px;
+            transition: var(--transition-normal);
+        }
+
+        .auth-logo {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin: 0 auto 2rem;
+        }
+
+        .auth-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .auth-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .pin-container {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .pin-input {
+            width: 56px;
+            height: 56px;
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            transition: var(--transition-fast);
+        }
+
+        .pin-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 4px rgba(0, 245, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .auth-button {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border: none;
+            border-radius: var(--radius-md);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-normal);
+            margin-bottom: 1rem;
+        }
+
+        .auth-button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-card);
+        }
+
+        .auth-button:active {
+            transform: scale(0.98);
+        }
+
+        .auth-error {
+            color: var(--accent-danger);
+            font-size: 14px;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: var(--transition-normal);
+        }
+
+        .auth-error.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(26, 26, 36, 0.95);
+            backdrop-filter: blur(var(--blur-amount));
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header-logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-card);
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition-fast);
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.1);
+        }
+
+        /* Navigation */
+        .nav-container {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 280px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 1.5rem;
+            transform: translateX(-100%);
+            transition: var(--transition-normal);
+            z-index: 99;
+            overflow-y: auto;
+        }
+
+        .nav-container.open {
+            transform: translateX(0);
+        }
+
+        .nav-header {
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .nav-subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition-fast);
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, rgba(0, 245, 255, 0.1), rgba(124, 58, 237, 0.1));
+            color: var(--accent-primary);
+            border-left: 3px solid var(--accent-primary);
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 0;
+            padding: 2rem;
+            min-height: calc(100vh - 80px);
+            transition: var(--transition-normal);
+        }
+
+        .content-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        /* Grid System */
+        .grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .grid-cols-1 { grid-template-columns: 1fr; }
+        .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            transition: var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-glass);
+            border-color: var(--accent-primary);
+        }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .metric-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-icon {
+            font-size: 24px;
+            opacity: 0.7;
+        }
+
+        .metric-value {
+            font-size: 36px;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-change {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .metric-change.positive {
+            color: var(--accent-success);
+        }
+
+        .metric-change.negative {
+            color: var(--accent-danger);
+        }
+
+        .progress-container {
+            margin-top: 1rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 4px;
+            transition: width var(--transition-normal);
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-fast);
+            text-decoration: none;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-card);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .grid-cols-2,
+            .grid-cols-3,
+            .grid-cols-4 {
+                grid-template-columns: 1fr;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+
+            .metric-value {
+                font-size: 28px;
+            }
+
+            .pin-container {
+                gap: 0.75rem;
+            }
+
+            .pin-input {
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
+            }
+
+            .auth-box {
+                padding: 2rem;
+            }
+        }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 98;
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition-normal);
+        }
+
+        .overlay.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* Utility Classes */
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+        .font-semibold { font-weight: 600; }
+        .font-bold { font-weight: 700; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // Haptic Feedback Hook
+        const useHaptic = () => {
+            const triggerHaptic = (intensity = 'light') => {
+                if ('vibrate' in navigator) {
+                    const patterns = {
+                        light: [10],
+                        medium: [20],
+                        heavy: [50]
+                    };
+                    navigator.vibrate(patterns[intensity] || patterns.light);
+                }
+            };
+
+            return { triggerHaptic };
+        };
+
+        // Loading Component
+        const LoadingScreen = ({ isVisible }) => {
+            if (!isVisible) return null;
+
+            return (
+                <div className="loading-overlay">
+                    <div className="loading-logo">🚀</div>
+                    <div className="loading-text">SAMS</div>
+                    <div className="loading-subtitle">System Administration & Monitoring Suite</div>
+                    <div className="loading-spinner"></div>
+                </div>
+            );
+        };
+
+        // Authentication Component
+        const AuthScreen = ({ onAuthenticate, isVisible }) => {
+            const [pin, setPin] = useState('');
+            const [error, setError] = useState(false);
+            const { triggerHaptic } = useHaptic();
+            const pinRefs = useRef([]);
+
+            const validPin = '1234';
+
+            useEffect(() => {
+                if (isVisible && pinRefs.current[0]) {
+                    pinRefs.current[0].focus();
+                }
+            }, [isVisible]);
+
+            const handlePinChange = (index, value) => {
+                if (value.length > 1) return;
+
+                const newPin = pin.split('');
+                newPin[index] = value;
+                const updatedPin = newPin.join('');
+                
+                setPin(updatedPin);
+                triggerHaptic('light');
+
+                if (value && index < 3) {
+                    pinRefs.current[index + 1]?.focus();
+                }
+
+                if (updatedPin.length === 4) {
+                    setTimeout(() => attemptLogin(updatedPin), 100);
+                }
+            };
+
+            const handleKeyDown = (index, e) => {
+                if (e.key === 'Backspace' && !pin[index] && index > 0) {
+                    pinRefs.current[index - 1]?.focus();
+                }
+            };
+
+            const attemptLogin = (pinValue = pin) => {
+                if (pinValue === validPin) {
+                    triggerHaptic('heavy');
+                    onAuthenticate();
+                } else {
+                    triggerHaptic('heavy');
+                    setError(true);
+                    setPin('');
+                    setTimeout(() => setError(false), 3000);
+                    pinRefs.current[0]?.focus();
+                }
+            };
+
+            if (!isVisible) return null;
+
+            return (
+                <div className="auth-container">
+                    <div className="auth-box animate-fade-in-up">
+                        <div className="auth-logo">🔐</div>
+                        <h1 className="auth-title">Welcome to SAMS</h1>
+                        <p className="auth-subtitle">Enter your 4-digit PIN to access the dashboard</p>
+                        
+                        <div className="pin-container">
+                            {[0, 1, 2, 3].map(index => (
+                                <input
+                                    key={index}
+                                    ref={el => pinRefs.current[index] = el}
+                                    type="password"
+                                    className="pin-input"
+                                    maxLength="1"
+                                    value={pin[index] || ''}
+                                    onChange={(e) => handlePinChange(index, e.target.value)}
+                                    onKeyDown={(e) => handleKeyDown(index, e)}
+                                    onFocus={() => triggerHaptic('light')}
+                                />
+                            ))}
+                        </div>
+                        
+                        <button 
+                            className="auth-button" 
+                            onClick={() => attemptLogin()}
+                            onMouseDown={() => triggerHaptic('medium')}
+                        >
+                            🚀 Access Dashboard
+                        </button>
+                        
+                        <div className={`auth-error ${error ? 'show' : ''}`}>
+                            ❌ Invalid PIN. Please try again.
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Header Component
+        const Header = ({ onMenuToggle, onLogout }) => {
+            const { triggerHaptic } = useHaptic();
+
+            return (
+                <header className="header">
+                    <div className="header-content">
+                        <div className="header-left">
+                            <button 
+                                onClick={() => {
+                                    triggerHaptic('light');
+                                    onMenuToggle();
+                                }}
+                                style={{
+                                    background: 'var(--bg-card)',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: 'var(--radius-sm)',
+                                    padding: '0.5rem',
+                                    color: 'var(--text-primary)',
+                                    cursor: 'pointer',
+                                    marginRight: '1rem'
+                                }}
+                            >
+                                ☰
+                            </button>
+                            <div className="header-logo">🚀</div>
+                            <div className="header-title">SAMS</div>
+                        </div>
+                        <div className="header-right">
+                            <div className="status-indicator">
+                                <div className="status-dot"></div>
+                                <span>System Online</span>
+                            </div>
+                            <div 
+                                className="user-avatar"
+                                onClick={() => {
+                                    triggerHaptic('medium');
+                                    if (confirm('Logout from SAMS?')) {
+                                        onLogout();
+                                    }
+                                }}
+                            >
+                                A
+                            </div>
+                        </div>
+                    </div>
+                </header>
+            );
+        };
+
+        // Navigation Component
+        const Navigation = ({ isOpen, currentPage, onPageChange, onLogout }) => {
+            const { triggerHaptic } = useHaptic();
+
+            const navItems = [
+                { id: 'overview', icon: '📊', label: 'Overview' },
+                { id: 'servers', icon: '🖥️', label: 'Servers' },
+                { id: 'monitoring', icon: '📈', label: 'Monitoring' },
+                { id: 'alerts', icon: '🚨', label: 'Alerts' },
+                { id: 'commands', icon: '⚡', label: 'Commands' },
+                { id: 'reports', icon: '📋', label: 'Reports' },
+                { id: 'settings', icon: '⚙️', label: 'Settings' }
+            ];
+
+            return (
+                <nav className={`nav-container ${isOpen ? 'open' : ''}`}>
+                    <div className="nav-header">
+                        <div className="nav-title">Dashboard</div>
+                        <div className="nav-subtitle">System Administration</div>
+                    </div>
+                    <ul className="nav-menu">
+                        {navItems.map(item => (
+                            <li key={item.id} className="nav-item">
+                                <a
+                                    className={`nav-link ${currentPage === item.id ? 'active' : ''}`}
+                                    onClick={() => {
+                                        triggerHaptic('light');
+                                        onPageChange(item.id);
+                                    }}
+                                >
+                                    <span>{item.icon}</span>
+                                    <span>{item.label}</span>
+                                </a>
+                            </li>
+                        ))}
+                        <li className="nav-item">
+                            <a
+                                className="nav-link"
+                                onClick={() => {
+                                    triggerHaptic('medium');
+                                    onLogout();
+                                }}
+                            >
+                                <span>🚪</span>
+                                <span>Logout</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            );
+        };
+
+        // Metric Card Component
+        const MetricCard = ({ title, icon, value, change, progress }) => {
+            const { triggerHaptic } = useHaptic();
+
+            return (
+                <div 
+                    className="card"
+                    onClick={() => triggerHaptic('light')}
+                    style={{ cursor: 'pointer' }}
+                >
+                    <div className="metric-header">
+                        <div className="metric-title">{title}</div>
+                        <div className="metric-icon">{icon}</div>
+                    </div>
+                    <div className="metric-value">{value}</div>
+                    <div className={`metric-change ${change.type}`}>
+                        <span>{change.type === 'positive' ? '↑' : '↓'}</span>
+                        <span>{change.text}</span>
+                    </div>
+                    {progress && (
+                        <div className="progress-container">
+                            <div className="progress-bar">
+                                <div 
+                                    className="progress-fill" 
+                                    style={{ width: `${progress.value}%` }}
+                                ></div>
+                            </div>
+                            <div className="progress-label">
+                                <span>{progress.min}</span>
+                                <span>{progress.max}</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // Overview Page Component
+        const OverviewPage = ({ metrics }) => {
+            return (
+                <div className="animate-fade-in-up">
+                    <div className="page-header">
+                        <h1 className="page-title">System Overview</h1>
+                        <p className="page-subtitle">Real-time monitoring and administration dashboard</p>
+                    </div>
+
+                    <div className="grid grid-cols-4">
+                        <MetricCard
+                            title="CPU Usage"
+                            icon="💻"
+                            value={`${metrics.cpuUsage}%`}
+                            change={{ type: 'positive', text: '2.1% from last hour' }}
+                            progress={{ value: metrics.cpuUsage, min: '0%', max: '100%' }}
+                        />
+                        <MetricCard
+                            title="Memory Usage"
+                            icon="🧠"
+                            value={`${metrics.memoryUsedGB} GB`}
+                            change={{ type: 'negative', text: '0.8% from last hour' }}
+                            progress={{ value: metrics.memoryUsage, min: '0 GB', max: `${metrics.totalMemory} GB` }}
+                        />
+                        <MetricCard
+                            title="Active Servers"
+                            icon="🖥️"
+                            value={metrics.activeServers}
+                            change={{ type: 'positive', text: 'All systems operational' }}
+                        />
+                        <MetricCard
+                            title="Network I/O"
+                            icon="🌐"
+                            value={metrics.networkIO}
+                            change={{ type: 'positive', text: '15% from last hour' }}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2" style={{ marginTop: '2rem' }}>
+                        <div className="card">
+                            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                                📊 CPU Usage Chart<br />
+                                <small>Chart visualization would go here</small>
+                            </div>
+                        </div>
+                        <div className="card">
+                            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                                📈 Memory Usage Chart<br />
+                                <small>Chart visualization would go here</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Server Card Component
+        const ServerCard = ({ server }) => {
+            const { triggerHaptic } = useHaptic();
+
+            return (
+                <div 
+                    className="card"
+                    onClick={() => triggerHaptic('light')}
+                    style={{ cursor: 'pointer' }}
+                >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                        <div style={{ fontSize: '18px', fontWeight: '600' }}>{server.name}</div>
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.25rem 0.5rem',
+                            borderRadius: 'var(--radius-sm)',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            background: server.status === 'online' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                            color: server.status === 'online' ? 'var(--accent-success)' : 'var(--accent-danger)'
+                        }}>
+                            <div className="status-dot"></div>
+                            {server.status.toUpperCase()}
+                        </div>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '0.25rem' }}>{server.cpu}%</div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>CPU</div>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '0.25rem' }}>{server.memory}%</div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Memory</div>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: '24px', fontWeight: '700', marginBottom: '0.25rem' }}>{server.uptime}</div>
+                            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Uptime</div>
+                        </div>
+                    </div>
+                    <button 
+                        className="btn btn-secondary" 
+                        style={{ width: '100%' }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            triggerHaptic('medium');
+                        }}
+                    >
+                        Manage Server
+                    </button>
+                </div>
+            );
+        };
+
+        // Servers Page Component
+        const ServersPage = ({ servers }) => {
+            return (
+                <div className="animate-fade-in-up">
+                    <div className="page-header">
+                        <h1 className="page-title">Server Management</h1>
+                        <p className="page-subtitle">Monitor and manage your server infrastructure</p>
+                    </div>
+
+                    <div className="grid grid-cols-2">
+                        {servers.map((server, index) => (
+                            <ServerCard key={index} server={server} />
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        // Generic Page Component
+        const GenericPage = ({ title, subtitle, content, icon }) => {
+            return (
+                <div className="animate-fade-in-up">
+                    <div className="page-header">
+                        <h1 className="page-title">{title}</h1>
+                        <p className="page-subtitle">{subtitle}</p>
+                    </div>
+
+                    <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
+                        <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>{icon}</div>
+                        <h3>{content}</h3>
+                        <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Feature implementation would go here</p>
+                    </div>
+                </div>
+            );
+        };
+
+        // Main App Component
+        const App = () => {
+            const [isLoading, setIsLoading] = useState(true);
+            const [isAuthenticated, setIsAuthenticated] = useState(false);
+            const [currentPage, setCurrentPage] = useState('overview');
+            const [isNavOpen, setIsNavOpen] = useState(false);
+            const [metrics, setMetrics] = useState({
+                cpuUsage: 0,
+                memoryUsage: 0,
+                memoryUsedGB: 0,
+                totalMemory: 16,
+                activeServers: 4,
+                networkIO: '0 MB/s'
+            });
+            const [servers, setServers] = useState([]);
+
+            // Initialize app
+            useEffect(() => {
+                const timer = setTimeout(() => {
+                    setIsLoading(false);
+                }, 2500);
+
+                return () => clearTimeout(timer);
+            }, []);
+
+            // Data updates
+            useEffect(() => {
+                if (isAuthenticated) {
+                    updateMetrics();
+                    updateServers();
+                    
+                    const interval = setInterval(() => {
+                        updateMetrics();
+                        if (currentPage === 'servers') {
+                            updateServers();
+                        }
+                    }, 5000);
+
+                    return () => clearInterval(interval);
+                }
+            }, [isAuthenticated, currentPage]);
+
+            const updateMetrics = () => {
+                const newMetrics = {
+                    cpuUsage: Math.floor(Math.random() * 40) + 20,
+                    memoryUsage: Math.floor(Math.random() * 30) + 50,
+                    totalMemory: 16,
+                    activeServers: 4,
+                    networkIO: `${(Math.random() * 100 + 50).toFixed(1)} MB/s`
+                };
+                newMetrics.memoryUsedGB = (newMetrics.memoryUsage * newMetrics.totalMemory / 100).toFixed(1);
+                setMetrics(newMetrics);
+            };
+
+            const updateServers = () => {
+                setServers([
+                    { name: 'Web Server 01', status: 'online', cpu: 45, memory: 62, uptime: '24d 5h' },
+                    { name: 'Database Server', status: 'online', cpu: 78, memory: 84, uptime: '15d 12h' },
+                    { name: 'API Gateway', status: 'online', cpu: 32, memory: 41, uptime: '30d 2h' },
+                    { name: 'Cache Server', status: 'offline', cpu: 0, memory: 0, uptime: '0d 0h' },
+                ]);
+            };
+
+            const handleAuthenticate = () => {
+                setIsAuthenticated(true);
+            };
+
+            const handleLogout = () => {
+                setIsAuthenticated(false);
+                setCurrentPage('overview');
+                setIsNavOpen(false);
+            };
+
+            const handlePageChange = (page) => {
+                setCurrentPage(page);
+                setIsNavOpen(false);
+            };
+
+            const handleMenuToggle = () => {
+                setIsNavOpen(!isNavOpen);
+            };
+
+            const renderCurrentPage = () => {
+                switch (currentPage) {
+                    case 'overview':
+                        return <OverviewPage metrics={metrics} />;
+                    case 'servers':
+                        return <ServersPage servers={servers} />;
+                    case 'monitoring':
+                        return <GenericPage 
+                            title="System Monitoring" 
+                            subtitle="Real-time system performance metrics"
+                            content="Monitoring Dashboard"
+                            icon="📈"
+                        />;
+                    case 'alerts':
+                        return <GenericPage 
+                            title="Alerts & Notifications" 
+                            subtitle="System alerts and notification management"
+                            content="No Active Alerts"
+                            icon="🚨"
+                        />;
+                    case 'commands':
+                        return <GenericPage 
+                            title="Command Execution" 
+                            subtitle="Execute system commands remotely"
+                            content="Command Terminal"
+                            icon="⚡"
+                        />;
+                    case 'reports':
+                        return <GenericPage 
+                            title="Reports & Analytics" 
+                            subtitle="System reports and data analytics"
+                            content="Reports Dashboard"
+                            icon="📋"
+                        />;
+                    case 'settings':
+                        return <GenericPage 
+                            title="System Settings" 
+                            subtitle="Configure system preferences and options"
+                            content="Configuration Panel"
+                            icon="⚙️"
+                        />;
+                    default:
+                        return <OverviewPage metrics={metrics} />;
+                }
+            };
+
+            return (
+                <div className="app-container">
+                    <LoadingScreen isVisible={isLoading} />
+                    
+                    {!isLoading && !isAuthenticated && (
+                        <AuthScreen 
+                            onAuthenticate={handleAuthenticate} 
+                            isVisible={true}
+                        />
+                    )}
+
+                    {!isLoading && isAuthenticated && (
+                        <>
+                            <Header 
+                                onMenuToggle={handleMenuToggle}
+                                onLogout={handleLogout}
+                            />
+                            
+                            <Navigation 
+                                isOpen={isNavOpen}
+                                currentPage={currentPage}
+                                onPageChange={handlePageChange}
+                                onLogout={handleLogout}
+                            />
+
+                            <main className="main-content">
+                                <div className="content-container">
+                                    {renderCurrentPage()}
+                                </div>
+                            </main>
+
+                            <div 
+                                className={`overlay ${isNavOpen ? 'show' : ''}`}
+                                onClick={() => setIsNavOpen(false)}
+                            ></div>
+                        </>
+                    )}
+                </div>
+            );
+        };
+
+        // Render the app
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

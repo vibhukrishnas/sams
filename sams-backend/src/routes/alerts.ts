@@ -3,9 +3,11 @@ import { body, query, validationResult } from 'express-validator';
 import { DatabaseService } from '../services/DatabaseService';
 import { NotificationService } from '../services/NotificationService';
 import { WebSocketService } from '../services/WebSocketService';
+import { AlertingService } from '../services/AlertingService';
 import { logger } from '../utils/logger';
 
 const router = express.Router();
+const alertingService = AlertingService.getInstance();
 
 // Get all alerts with filtering and pagination
 router.get('/', 

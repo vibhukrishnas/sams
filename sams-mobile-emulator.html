@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0f0f23">
+    <title>SAMS Mobile</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            touch-action: pan-y;
+        }
+        
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 100vw;
+        }
+        
+        /* PIN Login Screen */
+        .login-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .login-title {
+            font-size: 2.5rem;
+            color: #4ecdc4;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        .login-subtitle {
+            font-size: 1.1rem;
+            color: #a0a0a0;
+            margin-bottom: 40px;
+        }
+        
+        .pin-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .pin-input {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #4ecdc4;
+            border-radius: 12px;
+            background: rgba(78, 205, 196, 0.1);
+            color: #fff;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            outline: none;
+        }
+        
+        .pin-hint {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        /* Main App */
+        .main-app {
+            display: none;
+            height: 100vh;
+            flex-direction: column;
+        }
+        
+        .main-app.active {
+            display: flex;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: #1a1a2e;
+            border-bottom: 1px solid #333;
+            min-height: 70px;
+        }
+        
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4ecdc4;
+        }
+        
+        .logout-btn {
+            padding: 8px 15px;
+            background: #ff6b6b;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        /* Content Area */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Status Card */
+        .status-card {
+            background: rgba(78, 205, 196, 0.1);
+            border: 1px solid #4ecdc4;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .status-title {
+            font-size: 1.3rem;
+            color: #4ecdc4;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        
+        @media (min-width: 768px) {
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .metric-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+        }
+        
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #4ecdc4;
+            margin-bottom: 15px;
+        }
+        
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+        
+        .metric-label {
+            color: #a0a0a0;
+            flex: 1;
+        }
+        
+        .metric-value {
+            color: #fff;
+            font-weight: bold;
+            text-align: right;
+            flex: 1;
+        }
+        
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #4ecdc4;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+        
+        /* Item Styles */
+        .item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .item-title {
+            font-weight: bold;
+            color: #4ecdc4;
+            margin-bottom: 4px;
+        }
+        
+        .item-subtitle {
+            font-size: 0.9rem;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+        
+        .item-meta {
+            font-size: 0.85rem;
+            color: #a0a0a0;
+        }
+        
+        /* Command Section */
+        .command-section {
+            margin-top: 20px;
+        }
+        
+        .command-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 12px;
+            padding: 15px;
+            color: #fff;
+            font-size: 16px;
+            margin-bottom: 15px;
+            resize: vertical;
+            min-height: 80px;
+            outline: none;
+        }
+        
+        .execute-btn {
+            width: 100%;
+            background: #4ecdc4;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .execute-btn:active {
+            background: #45b7aa;
+        }
+        
+        .output {
+            background: #000;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            display: none;
+        }
+        
+        .output.show {
+            display: block;
+        }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            display: flex;
+            background: #1a1a2e;
+            border-top: 1px solid #333;
+            min-height: 70px;
+        }
+        
+        .nav-item {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px 10px;
+            color: #a0a0a0;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            margin: 5px;
+        }
+        
+        .nav-item.active {
+            background: rgba(78, 205, 196, 0.2);
+            color: #4ecdc4;
+        }
+        
+        /* Loading and Error States */
+        .loading {
+            color: #feca57;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .error {
+            color: #ff6b6b;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            .header {
+                padding: 10px 15px;
+            }
+            
+            .header-title {
+                font-size: 1.3rem;
+            }
+            
+            .content {
+                padding: 10px;
+            }
+            
+            .metric-card {
+                padding: 15px;
+            }
+            
+            .nav-item {
+                font-size: 12px;
+                padding: 10px 5px;
+            }
+        }
+        
+        /* Landscape adjustments */
+        @media (orientation: landscape) and (max-height: 500px) {
+            .login-screen {
+                justify-content: flex-start;
+                padding-top: 30px;
+            }
+            
+            .login-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- PIN Login Screen -->
+        <div class="login-screen" id="loginScreen">
+            <h1 class="login-title">🔐 SAMS Mobile</h1>
+            <p class="login-subtitle">System Administration & Monitoring Suite</p>
+            
+            <div class="pin-container">
+                <input type="password" class="pin-input" maxlength="1" id="pin1">
+                <input type="password" class="pin-input" maxlength="1" id="pin2">
+                <input type="password" class="pin-input" maxlength="1" id="pin3">
+                <input type="password" class="pin-input" maxlength="1" id="pin4">
+            </div>
+            
+            <p class="pin-hint">Enter PIN: 1234</p>
+        </div>
+        
+        <!-- Main App -->
+        <div class="main-app" id="mainApp">
+            <!-- Header -->
+            <div class="header">
+                <h1 class="header-title">SAMS Mobile</h1>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+            
+            <!-- Content -->
+            <div class="content" id="content">
+                <!-- Overview Tab -->
+                <div id="overviewTab" class="tab-content">
+                    <!-- Status Card -->
+                    <div class="status-card">
+                        <h2 class="status-title">🖥️ System Status</h2>
+                        <div class="metric-row">
+                            <span class="metric-label">Backend:</span>
+                            <span class="metric-value" id="backendStatus">Connecting...</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Last Update:</span>
+                            <span class="metric-value" id="lastUpdate">Never</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Uptime:</span>
+                            <span class="metric-value" id="uptime">--</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Metrics Grid -->
+                    <div class="metrics-grid">
+                        <!-- CPU Card -->
+                        <div class="metric-card">
+                            <h3 class="card-title">🖥️ CPU Performance</h3>
+                            <div class="metric-row">
+                                <span class="metric-label">Usage:</span>
+                                <span class="metric-value" id="cpuUsage">--</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="cpuProgress"></div>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Cores:</span>
+                                <span class="metric-value" id="cpuCores">--</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Load Avg:</span>
+                                <span class="metric-value" id="loadAvg">--</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Memory Card -->
+                        <div class="metric-card">
+                            <h3 class="card-title">💾 Memory Usage</h3>
+                            <div class="metric-row">
+                                <span class="metric-label">Used:</span>
+                                <span class="metric-value" id="memoryUsed">--</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="memoryProgress"></div>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Usage:</span>
+                                <span class="metric-value" id="memoryPercent">--</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Available:</span>
+                                <span class="metric-value" id="memoryAvailable">--</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Network Card -->
+                        <div class="metric-card">
+                            <h3 class="card-title">🌐 Network Activity</h3>
+                            <div class="metric-row">
+                                <span class="metric-label">Received:</span>
+                                <span class="metric-value" id="netReceived">--</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Sent:</span>
+                                <span class="metric-value" id="netSent">--</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Packets In:</span>
+                                <span class="metric-value" id="packetsIn">--</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Packets Out:</span>
+                                <span class="metric-value" id="packetsOut">--</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Connections:</span>
+                                <span class="metric-value" id="connections">--</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Disk Usage Card -->
+                        <div class="metric-card">
+                            <h3 class="card-title">💽 Disk Usage</h3>
+                            <div id="diskList">
+                                <div class="loading">Loading disk information...</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Network Interfaces Card -->
+                        <div class="metric-card">
+                            <h3 class="card-title">🔗 Network Interfaces</h3>
+                            <div id="interfaceList">
+                                <div class="loading">Loading network interfaces...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Commands Tab -->
+                <div id="commandsTab" class="tab-content" style="display: none;">
+                    <div class="metric-card command-section">
+                        <h3 class="card-title">⚡ Execute Command</h3>
+                        <textarea 
+                            class="command-input" 
+                            id="commandInput" 
+                            placeholder="Enter command (e.g., dir, ipconfig, systeminfo)"
+                        ></textarea>
+                        <button class="execute-btn" onclick="executeCommand()">Execute</button>
+                        <div class="output" id="commandOutput"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bottom Navigation -->
+            <div class="bottom-nav">
+                <div class="nav-item active" onclick="switchTab('overview')">
+                    📊 Overview
+                </div>
+                <div class="nav-item" onclick="switchTab('commands')">
+                    ⚡ Commands
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'http://localhost:8082/api/v1';
+        let isAuthenticated = false;
+        let currentTab = 'overview';
+        let metricsInterval;
+        
+        // Utility functions
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        function formatUptime(seconds) {
+            const days = Math.floor(seconds / 86400);
+            const hours = Math.floor((seconds % 86400) / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            return `${days}d ${hours}h ${minutes}m`;
+        }
+        
+        // PIN Authentication
+        function setupPinInputs() {
+            const pinInputs = document.querySelectorAll('.pin-input');
+            pinInputs.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    const value = e.target.value;
+                    if (value.length === 1 && index < pinInputs.length - 1) {
+                        pinInputs[index + 1].focus();
+                    }
+                    checkPin();
+                });
+                
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
+                        pinInputs[index - 1].focus();
+                    }
+                });
+            });
+        }
+        
+        function checkPin() {
+            const pinInputs = document.querySelectorAll('.pin-input');
+            const pin = Array.from(pinInputs).map(input => input.value).join('');
+            
+            if (pin.length === 4 && pin === '1234') {
+                login();
+            }
+        }
+        
+        function login() {
+            isAuthenticated = true;
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('mainApp').classList.add('active');
+            startMetricsUpdates();
+        }
+        
+        function logout() {
+            isAuthenticated = false;
+            document.getElementById('loginScreen').style.display = 'flex';
+            document.getElementById('mainApp').classList.remove('active');
+            stopMetricsUpdates();
+            
+            // Clear PIN inputs
+            document.querySelectorAll('.pin-input').forEach(input => {
+                input.value = '';
+            });
+            document.getElementById('pin1').focus();
+        }
+        
+        // Tab switching
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Update nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            document.getElementById(tab + 'Tab').style.display = 'block';
+        }
+        
+        // Metrics fetching
+        async function fetchMetrics() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/metrics`);
+                if (response.ok) {
+                    const data = await response.json();
+                    updateMetrics(data);
+                    document.getElementById('backendStatus').textContent = '✅ Connected';
+                    document.getElementById('backendStatus').style.color = '#4ecdc4';
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Failed to fetch metrics:', error);
+                document.getElementById('backendStatus').textContent = '❌ Disconnected';
+                document.getElementById('backendStatus').style.color = '#ff6b6b';
+            }
+        }
+        
+        function updateMetrics(data) {
+            // Update timestamp
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+            document.getElementById('uptime').textContent = data.uptime ? formatUptime(data.uptime) : '--';
+            
+            // CPU metrics
+            document.getElementById('cpuUsage').textContent = `${data.cpuUsage?.toFixed(1) || '0.0'}%`;
+            document.getElementById('cpuProgress').style.width = `${data.cpuUsage || 0}%`;
+            document.getElementById('cpuCores').textContent = data.cpuCores || '0';
+            document.getElementById('loadAvg').textContent = 
+                `${data.loadAverage1m?.toFixed(2) || '0.00'}`;
+            
+            // Memory metrics
+            document.getElementById('memoryUsed').textContent = 
+                `${formatBytes(data.memoryUsed || 0)}`;
+            const memoryPercent = data.memoryUsagePercent || 0;
+            document.getElementById('memoryProgress').style.width = `${memoryPercent}%`;
+            document.getElementById('memoryProgress').style.backgroundColor = 
+                memoryPercent > 80 ? '#ff6b6b' : '#4ecdc4';
+            document.getElementById('memoryPercent').textContent = `${memoryPercent.toFixed(1)}%`;
+            document.getElementById('memoryAvailable').textContent = formatBytes(data.memoryAvailable || 0);
+            
+            // Network metrics
+            document.getElementById('netReceived').textContent = formatBytes(data.networkBytesReceived || 0);
+            document.getElementById('netSent').textContent = formatBytes(data.networkBytesSent || 0);
+            document.getElementById('packetsIn').textContent = (data.networkPacketsReceived || 0).toLocaleString();
+            document.getElementById('packetsOut').textContent = (data.networkPacketsSent || 0).toLocaleString();
+            document.getElementById('connections').textContent = data.networkConnections || '0';
+            
+            // Disk usage
+            const diskList = document.getElementById('diskList');
+            if (data.diskUsage && data.diskUsage.length > 0) {
+                diskList.innerHTML = data.diskUsage.map(disk => `
+                    <div class="item">
+                        <div class="item-title">${disk.mountPoint}</div>
+                        <div class="item-subtitle">${disk.usagePercent}% used - ${disk.fileSystem}</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${disk.usagePercent}%; background-color: ${
+                                disk.usagePercent > 90 ? '#ff6b6b' : 
+                                disk.usagePercent > 70 ? '#feca57' : '#4ecdc4'
+                            }"></div>
+                        </div>
+                        <div class="item-meta">
+                            Free: ${formatBytes(disk.availableSpace)} / Total: ${formatBytes(disk.totalSpace)}
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                diskList.innerHTML = '<div class="error">No disk information available</div>';
+            }
+            
+            // Network interfaces
+            const interfaceList = document.getElementById('interfaceList');
+            if (data.networkInterfaces && data.networkInterfaces.length > 0) {
+                interfaceList.innerHTML = data.networkInterfaces.map(iface => `
+                    <div class="item">
+                        <div class="item-title">${iface.interface}</div>
+                        <div class="item-subtitle">IP: ${iface.ip_address}</div>
+                        <div class="item-meta" style="color: ${iface.is_up ? '#4ecdc4' : '#ff6b6b'}">
+                            Status: ${iface.is_up ? 'UP' : 'DOWN'}
+                            ${iface.speed > 0 ? ` • Speed: ${iface.speed} Mbps` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                interfaceList.innerHTML = '<div class="error">No network interface information available</div>';
+            }
+        }
+        
+        // Command execution
+        async function executeCommand() {
+            const commandInput = document.getElementById('commandInput');
+            const outputDiv = document.getElementById('commandOutput');
+            const command = commandInput.value.trim();
+            
+            if (!command) return;
+            
+            outputDiv.classList.add('show');
+            outputDiv.textContent = 'Executing command...';
+            outputDiv.style.color = '#feca57';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/execute`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: command })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    outputDiv.textContent = `${result.stdout}\n${result.stderr}`.trim() || 'Command executed successfully (no output)';
+                    outputDiv.style.color = '#00ff00';
+                } else {
+                    outputDiv.textContent = `Error: HTTP ${response.status}`;
+                    outputDiv.style.color = '#ff6b6b';
+                }
+            } catch (error) {
+                outputDiv.textContent = `Error: ${error.message}`;
+                outputDiv.style.color = '#ff6b6b';
+            }
+        }
+        
+        // Metrics updates
+        function startMetricsUpdates() {
+            fetchMetrics();
+            metricsInterval = setInterval(fetchMetrics, 5000);
+        }
+        
+        function stopMetricsUpdates() {
+            if (metricsInterval) {
+                clearInterval(metricsInterval);
+                metricsInterval = null;
+            }
+        }
+        
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', () => {
+            setupPinInputs();
+            document.getElementById('pin1').focus();
+            
+            // Add touch feedback for nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('touchstart', () => {
+                    item.style.opacity = '0.7';
+                });
+                item.addEventListener('touchend', () => {
+                    item.style.opacity = '1';
+                });
+            });
+            
+            // Add enter key support for command execution
+            document.getElementById('commandInput').addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    executeCommand();
+                }
+            });
+        });
+        
+        // Handle orientation changes
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                window.scrollTo(0, 0);
+            }, 100);
+        });
+        
+        // Prevent zoom on double tap
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (event) => {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    </script>
+</body>
+</html>
